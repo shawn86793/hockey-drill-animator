@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THQ Hockey Drill Animator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060d16;color:#fff;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
+
+#header{background:linear-gradient(135deg,#071422,#0d2035);border-bottom:2px solid #00a8ff;padding:6px 16px;display:flex;align-items:center;gap:14px;height:58px;flex-shrink:0}
+#logo-wrap{width:44px;height:44px;flex-shrink:0}
+#title{font-size:18px;font-weight:800;letter-spacing:1px;background:linear-gradient(90deg,#fff 40%,#00a8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{font-size:10px;color:#4a7fa0;letter-spacing:2px;text-transform:uppercase}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.ice-toggle{display:flex;background:#071422;border:1px solid #1a4a6a;border-radius:20px;overflow:hidden}
+.ice-btn{padding:6px 18px;cursor:pointer;font-size:12px;font-weight:600;color:#5a8aaa;border:none;background:transparent;transition:all .2s;letter-spacing:.5px}
+.ice-btn.active{background:linear-gradient(135deg,#0066cc,#00a8ff);color:#fff}
+
+#main{display:flex;flex:1;overflow:hidden;min-height:0}
+
+#sidebar{width:190px;background:#071422;border-right:1px solid #0d2035;display:flex;flex-direction:column;padding:10px;gap:12px;overflow-y:auto;flex-shrink:0}
+.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#00a8ff;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #0d2035}
+
+.positions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.pos-token{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:grab;border:2px solid transparent;transition:transform .15s,box-shadow .2s}
+.pos-token:hover{transform:scale(1.12)}
+.pos-token:active{cursor:grabbing}
+
+.move-types{display:flex;flex-direction:column;gap:4px}
+.move-btn{padding:7px 9px;border-radius:7px;border:1px solid #0d2035;background:#0a1a28;color:#6a9ab8;cursor:pointer;font-size:11px;display:flex;align-items:center;gap:7px;transition:all .15s;text-align:left}
+.move-btn:hover{border-color:#00a8ff44;color:#c0dff0}
+.move-btn.active{background:#00a8ff18;border-color:#00a8ff;color:#00d4ff}
+.move-icon{width:34px;height:14px;flex-shrink:0}
+
+.speed-sec{display:flex;flex-direction:column;gap:5px}
+.speed-row{display:flex;justify-content:space-between;font-size:10px;color:#4a7a9a}
+input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
+
+.play-row{display:flex;gap:5px;margin-bottom:5px}
+.pbtn{flex:1;padding:7px;border-radius:7px;border:none;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s}
+#playBtn{background:linear-gradient(135deg,#006622,#00cc44);color:#fff}
+#playBtn:hover{background:linear-gradient(135deg,#007a28,#00ff55)}
+#stopBtn{background:#1a0a00;border:1px solid #553300;color:#ff6600;cursor:pointer;padding:7px;border-radius:7px;font-size:11px;font-weight:700;transition:all .2s}
+#stopBtn:hover{background:#2a1500;color:#ff9900}
+#resetBtn{width:100%;padding:6px;border-radius:7px;border:1px solid #1a2a3a;background:#0a1520;color:#5a8aaa;cursor:pointer;font-size:11px;margin-bottom:4px;transition:all .2s}
+#resetBtn:hover{color:#90c0e0;border-color:#2a4a6a}
+#clearBtn{width:100%;padding:6px;border-radius:7px;border:1px solid #3a1a00;background:#1a0a00;color:#cc6600;cursor:pointer;font-size:11px;transition:all .2s}
+#clearBtn:hover{background:#2a1500;color:#ff9900}
+#addCustomBtn{width:100%;margin-top:7px;padding:6px;border-radius:20px;border:1px dashed #1a4a6a;background:transparent;color:#3a8ab8;cursor:pointer;font-size:11px;transition:all .2s}
+#addCustomBtn:hover{background:#00a8ff14;color:#00a8ff;border-color:#00a8ff}
+
+.hint{font-size:9px;color:#2a4a5a;line-height:1.6}
+.hint strong{color:#3a6a8a}
+
+#canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a1a2a,#030810);position:relative;overflow:hidden;min-width:0}
+#rinkCanvas{display:block;cursor:crosshair}
+#tipbar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,10,20,.85);border:1px solid #0d3050;color:#4a8ab0;padding:5px 16px;border-radius:20px;font-size:11px;pointer-events:none;white-space:nowrap}
+#selInfo{position:absolute;top:10px;right:10px;background:rgba(0,168,255,.12);border:1px solid #00a8ff55;border-radius:8px;padding:6px 12px;font-size:11px;color:#00d4ff;display:none}
+
+/* Modal */
+#modal{display:none;position:fixed;inset:0;background:rgba(0,5,15,.8);z-index:200;align-items:center;justify-content:center}
+#modal.open{display:flex}
+#mbox{background:#071422;border:1px solid #00a8ff;border-radius:14px;padding:22px;width:290px}
+#mbox h3{margin-bottom:14px;color:#00a8ff;font-size:15px}
+#mbox input{width:100%;padding:8px;border-radius:6px;border:1px solid #1a3a5a;background:#0a1a28;color:#fff;margin-bottom:10px;font-size:14px;font-family:inherit}
+#mbox input::placeholder{color:#2a5a7a}
+.clr-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.cswatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s}
+.cswatch:hover{transform:scale(1.1)}
+.cswatch.sel{border-color:#fff;box-shadow:0 0 8px #fff8}
+.mbtns{display:flex;gap:8px;justify-content:flex-end}
+.mbtns button{padding:7px 16px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:600}
+#mCancel{background:#0d2035;color:#6a9ab8}
+#mOK{background:#00a8ff;color:#000}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="logo-wrap">
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="44" height="44">
+      <rect width="100" height="100" rx="20" fill="#080e18"/>
+      <rect width="100" height="100" rx="20" fill="url(#lg1)" opacity=".3"/>
+      <defs>
+        <radialGradient id="lg1" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stop-color="#00a8ff" stop-opacity=".5"/>
+          <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <!-- Blue swoosh -->
+      <path d="M10,70 Q30,30 92,52" stroke="#00a8ff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9"/>
+      <!-- Orange swoosh -->
+      <path d="M30,18 Q60,5 88,30" stroke="#ff9900" stroke-width="4.5" fill="none" stroke-linecap="round" opacity=".95"/>
+      <!-- T letter white -->
+      <rect x="26" y="24" width="48" height="9" rx="4" fill="white"/>
+      <rect x="43" y="24" width="14" height="44" rx="4" fill="white"/>
+      <!-- HQ orange -->
+      <text x="55" y="84" font-size="13" font-weight="900" fill="#ff9900" font-family="Arial,sans-serif">HQ</text>
+    </svg>
+  </div>
+  <div>
+    <div id="title">HOCKEY DRILL ANIMATOR</div>
+    <div class="subtitle">THQ Sports</div>
+  </div>
+  <div class="header-right">
+    <div class="ice-toggle">
+      <button class="ice-btn active" onclick="setIce('full')">Full Ice</button>
+      <button class="ice-btn" onclick="setIce('half')">Half Ice</button>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+  <div id="sidebar">
+
+    <div>
+      <div class="sec">Players</div>
+      <div class="positions-grid" id="posGrid"></div>
+      <button id="addCustomBtn" onclick="openModal()">+ Custom Position</button>
+    </div>
+
+    <div>
+      <div class="sec">Move Type</div>
+      <div class="move-types">
+        <button class="move-btn active" data-m="select" onclick="setMode('select')">
+          <svg class="move-icon" viewBox="0 0 34 14"><path d="M3,7 L31,7 M26,3 L31,7 L26,11" stroke="#00d4ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Select &amp; Move
+        </button>
+        <button class="move-btn" data-m="skate" onclick="setMode('skate')">
+          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="7" x2="29" y2="7" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round"/><path d="M25,3 L31,7 L25,11" stroke="#00ff88" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Skate
+        </button>
+        <button class="move-btn" data-m="skatePuck" onclick="setMode('skatePuck')">
+          <svg class="move-icon" viewBox="0 0 34 14"><path d="M3,7 Q7,3 11,7 Q15,11 19,7 Q23,3 27,7" stroke="#ffaa00" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M24,3 L30,7 L24,11" stroke="#ffaa00" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Skate w/ Puck
+        </button>
+        <button class="move-btn" data-m="pass" onclick="setMode('pass')">
+          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="7" x2="27" y2="7" stroke="#00a8ff" stroke-width="2" stroke-dasharray="4,3" stroke-linecap="round"/><path d="M24,3 L31,7 L24,11" stroke="#00a8ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Pass
+        </button>
+        <button class="move-btn" data-m="shot" onclick="setMode('shot')">
+          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="5" x2="28" y2="5" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="9" x2="28" y2="9" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><path d="M25,2 L32,7 L25,12" stroke="#ff4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Shot
+        </button>
+        <button class="move-btn" data-m="del" onclick="setMode('del')">
+          <svg class="move-icon" viewBox="0 0 34 14"><text x="5" y="12" font-size="13" fill="#ff6666">✕</text></svg>
+          Delete Player
+        </button>
+      </div>
+    </div>
+
+    <div class="speed-sec">
+      <div class="sec">Animation Speed</div>
+      <div class="speed-row"><span>Slow</span><span id="speedLbl">1.0x</span><span>Fast</span></div>
+      <input type="range" id="speedSlider" min="0.25" max="4" step="0.25" value="1" oninput="setSpeed(this.value)">
+    </div>
+
+    <div>
+      <div class="sec">Playback</div>
+      <div class="play-row">
+        <button class="pbtn" id="playBtn" onclick="togglePlay()">▶ Play</button>
+        <button id="stopBtn" onclick="stopAnim()">■ Stop</button>
+      </div>
+      <button id="resetBtn" onclick="resetAll()">⟲ Reset All</button>
+      <button id="clearBtn" onclick="clearMoves()">✕ Clear Moves</button>
+    </div>
+
+    <div class="hint">
+      <strong>Quick Start:</strong><br>
+      1. Drag players onto ice<br>
+      2. Pick a move type<br>
+      3. Click player → click destination<br>
+      4. Chain moves, then ▶ Play
+    </div>
+
+  </div>
+
+  <div id="canvas-wrap">
+    <canvas id="rinkCanvas"></canvas>
+    <div id="selInfo"></div>
+    <div id="tipbar">Drag player tokens onto the ice to get started</div>
+  </div>
+</div>
+
+<div id="modal">
+  <div id="mbox">
+    <h3>Add Custom Position</h3>
+    <input id="customLbl" maxlength="3" placeholder="Label (e.g. X1, F4)">
+    <div class="sec" style="margin-bottom:8px">Color</div>
+    <div class="clr-row" id="clrRow"></div>
+    <div class="mbtns">
+      <button id="mCancel" onclick="closeModal()">Cancel</button>
+      <button id="mOK" onclick="addCustom()">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ───────────────────────────────────────────────
+const BASE_POSITIONS = [
+  {label:'C',  color:'#FF6B35', name:'Center'},
+  {label:'LW', color:'#4ECDC4', name:'Left Wing'},
+  {label:'RW', color:'#45B7D1', name:'Right Wing'},
+  {label:'LD', color:'#96CEB4', name:'Left Defense'},
+  {label:'RD', color:'#FFEAA7', name:'Right Defense'},
+  {label:'G',  color:'#DA8BFF', name:'Goalie'},
+];
+const PALETTE = ['#FF6B35','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DA8BFF',
+                 '#FF8888','#88FF88','#FFD700','#FF88FF','#ffffff','#aaaaaa'];
+
+// NHL rink in feet
+const R = {
+  W:200, H:85,
+  cornerR:28,
+  goalLineX:11,       // from each end
+  blueLineX:75,       // from each end board
+  ezFOy:[21.5,63.5],  // end-zone faceoff circle centres (from left board)
+  ezFOxOff:20,        // from goal line (toward centre)
+  nzFOy:[21.5,63.5],  // neutral-zone faceoff dot y
+  nzFOxOff:5,         // from blue line (outside, toward end)
+  circleR:15,
+  creaseR:6,
+  netW:6, netD:4,
+};
+
+// ── STATE ───────────────────────────────────────────────────
+let iceType = 'full';
+let mode = 'select';
+let players = [];
+let moves = [];
+let customPositions = [];
+let selectedId = null;
+let drawingMove = null; // {playerId, type}
+let animPlaying = false;
+let animTime = 0;
+let animSpeed = 1;
+let animRaf = null;
+let animLastTs = null;
+
+// Drag token from sidebar
+let dragToken = null;   // {label,color}
+let mousePos = {x:0, y:0}; // global mouse
+
+// Drag player on canvas
+let dragPlayer = null;
+let dragOff = {x:0,y:0};
+
+let canvas, ctx, CW, CH;
+
+// ── INIT ────────────────────────────────────────────────────
+function init(){
+  canvas = document.getElementById('rinkCanvas');
+  ctx = canvas.getContext('2d');
+  buildGrid();
+  buildPalette();
+  resize();
+  window.addEventListener('resize', resize);
+  canvas.addEventListener('mousedown', onCDown);
+  canvas.addEventListener('mousemove', onCMove);
+  canvas.addEventListener('mouseup', onCUp);
+  canvas.addEventListener('mouseleave', onCLeave);
+  canvas.addEventListener('contextmenu', e=>{e.preventDefault(); cancelDraw();});
+  document.addEventListener('mousemove', onGMove);
+  document.addEventListener('mouseup', onGUp);
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') cancelDraw(); });
+  render();
+}
+
+function buildGrid(){
+  const g = document.getElementById('posGrid');
+  g.innerHTML = '';
+  [...BASE_POSITIONS,...customPositions].forEach(p=>{
+    const el = document.createElement('div');
+    el.className = 'pos-token';
+    el.textContent = p.label;
+    el.title = p.name||p.label;
+    el.style.cssText = `background:${p.color}28;color:${p.color};border-color:${p.color}70`;
+    el.addEventListener('mousedown', e=>startTokenDrag(e,p));
+    g.appendChild(el);
+  });
+}
+
+function buildPalette(){
+  const r = document.getElementById('clrRow');
+  r.innerHTML = '';
+  PALETTE.forEach((c,i)=>{
+    const el = document.createElement('div');
+    el.className = 'cswatch'+(i===0?' sel':'');
+    el.style.background = c;
+    el.onclick = ()=>{ r.querySelectorAll('.cswatch').forEach(s=>s.classList.remove('sel')); el.classList.add('sel'); };
+    r.appendChild(el);
+  });
+}
+
+// ── RESIZE & COORDS ─────────────────────────────────────────
+function resize(){
+  const wrap = document.getElementById('canvas-wrap');
+  const aw = wrap.clientWidth - 24;
+  const ah = wrap.clientHeight - 24;
+  const rW = iceType==='full' ? R.W : R.W/2;
+  const scale = Math.min(aw/rW, ah/R.H);
+  CW = Math.round(rW * scale);
+  CH = Math.round(R.H * scale);
+  canvas.width = CW;
+  canvas.height = CH;
+  render();
+}
+
+function r2c(rx, ry){ // rink coords → canvas pixels
+  const rW = iceType==='full' ? R.W : R.W/2;
+  return { x: rx/rW*CW, y: ry/R.H*CH };
+}
+function c2r(cx, cy){ // canvas pixels → rink coords
+  const rW = iceType==='full' ? R.W : R.W/2;
+  return { x: cx/CW*rW, y: cy/CH*R.H };
+}
+function sx(d){ const rW=iceType==='full'?R.W:R.W/2; return d/rW*CW; } // scale x distance
+function sy(d){ return d/R.H*CH; }                                       // scale y distance
+
+// ── DRAW RINK ───────────────────────────────────────────────
+function drawRink(){
+  ctx.clearRect(0,0,CW,CH);
+  const BOARD = 5; // board thickness px
+
+  if(iceType==='full'){
+    const cr = sx(R.cornerR);
+    // White ice fill
+    rrect(BOARD,BOARD,CW-BOARD*2,CH-BOARD*2,cr);
+    ctx.fillStyle='#ffffff'; ctx.fill();
+    // Clip and draw lines inside boards
+    ctx.save(); rrect(BOARD,BOARD,CW-BOARD*2,CH-BOARD*2,cr); ctx.clip();
+    drawLines('full'); ctx.restore();
+    // Thick black boards
+    rrect(0,0,CW,CH,cr+BOARD);
+    ctx.strokeStyle='#111'; ctx.lineWidth=BOARD*2; ctx.stroke();
+  } else {
+    const cr = sx(R.cornerR);
+    // Half ice: rounded left end, flat right (center line)
+    halfRectPath(cr,BOARD);
+    ctx.fillStyle='#ffffff'; ctx.fill();
+    ctx.save(); halfRectPath(cr,BOARD); ctx.clip();
+    drawLines('half'); ctx.restore();
+    // Boards: left rounded end + top/bottom boards only
+    ctx.strokeStyle='#111'; ctx.lineWidth=BOARD*2;
+    ctx.beginPath();
+    ctx.moveTo(BOARD,cr); ctx.arcTo(BOARD,BOARD,cr,BOARD,cr);
+    ctx.lineTo(CW-BOARD,BOARD); // top board
+    ctx.moveTo(BOARD,CH-cr); ctx.arcTo(BOARD,CH-BOARD,cr,CH-BOARD,cr);
+    ctx.lineTo(CW-BOARD,CH-BOARD); // bottom board
+    ctx.stroke();
+    // Left curved end board
+    ctx.beginPath(); ctx.arc(cr+BOARD,CH/2, CH/2-BOARD, -Math.PI/2, Math.PI/2); ctx.stroke();
+    // Dashed red centre line at right edge
+    ctx.strokeStyle='#cc0000'; ctx.lineWidth=sx(1.5);
+    ctx.setLineDash([sy(2),sy(2)]);
+    ctx.beginPath(); ctx.moveTo(CW-BOARD,BOARD); ctx.lineTo(CW-BOARD,CH-BOARD); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function rrect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
+}
+function halfRectPath(cr,b){
+  ctx.beginPath();
+  ctx.moveTo(b+cr,b); ctx.lineTo(CW-b,b);
+  ctx.lineTo(CW-b,CH-b); ctx.lineTo(b+cr,CH-b);
+  ctx.arcTo(b,CH-b,b,CH-b-cr,cr); ctx.lineTo(b,b+cr);
+  ctx.arcTo(b,b,b+cr,b,cr); ctx.closePath();
+}
+
+function drawLines(half){
+  ctx.setLineDash([]);
+  const B = 5;
+  const glL=sx(R.goalLineX), glR=sx(R.W-R.goalLineX);
+  const blL=sx(R.blueLineX), blR=sx(R.W-R.blueLineX);
+  const cx2=CW/2, cy=CH/2;
+  const LW = sx(1.2);  // line width for thin lines
+
+  if(half==='full'){
+    // ── Trapezoid behind each goal ──
+    drawTrap(glL,1); drawTrap(glR,-1);
+
+    // ── Goal lines ──
+    vline(glL,'#cc0000',LW); vline(glR,'#cc0000',LW);
+
+    // ── Blue lines ──
+    vline(blL,'#1155cc',sx(2.5)); vline(blR,'#1155cc',sx(2.5));
+
+    // ── Centre red line (dashed) ──
+    ctx.strokeStyle='#cc0000'; ctx.lineWidth=sx(2);
+    ctx.setLineDash([sy(2.5),sy(2.5)]);
+    ctx.beginPath(); ctx.moveTo(cx2,B); ctx.lineTo(cx2,CH-B); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ── Centre circle (BLUE) ──
+    circle(cx2,cy,sx(R.circleR),'#1155cc',LW);
+    dot(cx2,cy,sx(1.5),'#cc0000');
+
+    // ── End-zone faceoff circles ──
+    const eys=R.ezFOy.map(y=>sy(y));
+    [[glL+sx(R.ezFOxOff),eys[0]],[glL+sx(R.ezFOxOff),eys[1]],
+     [glR-sx(R.ezFOxOff),eys[0]],[glR-sx(R.ezFOxOff),eys[1]]].forEach(([fx,fy])=>{
+      circle(fx,fy,sx(R.circleR),'#cc0000',LW);
+      dot(fx,fy,sx(1.5),'#cc0000');
+      hashMarks(fx,fy);
+    });
+
+    // ── Neutral-zone faceoff dots (5ft INSIDE blue lines, toward centre) ──
+    const nys=R.nzFOy.map(y=>sy(y));
+    [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]],
+     [blR-sx(R.nzFOxOff),nys[0]],[blR-sx(R.nzFOxOff),nys[1]]].forEach(([fx,fy])=>{
+      dot(fx,fy,sx(1.5),'#cc0000');
+    });
+
+    // ── Creases & nets ──
+    drawCrease(glL,cy,1); drawNet(glL,cy,1);
+    drawCrease(glR,cy,-1); drawNet(glR,cy,-1);
+
+  } else { // half ice
+    const B=5;
+    drawTrap(glL,1);
+    vline(glL,'#cc0000',LW);
+    vline(blL,'#1155cc',sx(2.5));
+
+    const eys=R.ezFOy.map(y=>sy(y));
+    const fx=glL+sx(R.ezFOxOff);
+    [[fx,eys[0]],[fx,eys[1]]].forEach(([x,y])=>{
+      circle(x,y,sx(R.circleR),'#cc0000',LW);
+      dot(x,y,sx(1.5),'#cc0000');
+      hashMarks(x,y);
+    });
+
+    // Neutral-zone dot (inside blue line toward centre)
+    const nys=R.nzFOy.map(y=>sy(y));
+    [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]]].forEach(([x,y])=>{
+      dot(x,y,sx(1.5),'#cc0000');
+    });
+
+    // Partial centre circle peeking in at right edge
+    ctx.strokeStyle='#1155cc'; ctx.lineWidth=LW; ctx.setLineDash([]);
+    ctx.save(); ctx.beginPath(); ctx.rect(0,0,CW,CH); ctx.clip();
+    ctx.beginPath(); ctx.arc(CW-B, cy, sx(R.circleR),0,Math.PI*2); ctx.stroke();
+    dot(CW-B,cy,sx(1.5),'#cc0000');
+    ctx.restore();
+
+    drawCrease(glL,cy,1); drawNet(glL,cy,1);
+  }
+}
+
+function vline(x,color,lw){
+  const B=5;
+  ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(x,B); ctx.lineTo(x,CH-B); ctx.stroke();
+}
+function circle(x,y,r,color,lw){
+  ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+}
+function dot(x,y,r,color){
+  ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+}
+function hashMarks(cx,cy){
+  // Standard NHL faceoff hash marks: L-shaped marks inside circle, lines on circle edge
+  const cr=sx(R.circleR);
+  const armLen=sx(4), barLen=sx(2.5), armOff=sx(2.5);
+  ctx.strokeStyle='#cc0000'; ctx.lineWidth=sx(0.9); ctx.setLineDash([]);
+  ctx.beginPath();
+  // Top-left hash (inside circle, upper-left quadrant)
+  ctx.moveTo(cx-armOff, cy-cr+sy(3));
+  ctx.lineTo(cx-armOff, cy-cr+sy(3)+armLen);   // vertical arm
+  ctx.moveTo(cx-armOff, cy-cr+sy(3));
+  ctx.lineTo(cx-armOff-barLen, cy-cr+sy(3));    // horizontal bar
+  // Top-right hash
+  ctx.moveTo(cx+armOff, cy-cr+sy(3));
+  ctx.lineTo(cx+armOff, cy-cr+sy(3)+armLen);
+  ctx.moveTo(cx+armOff, cy-cr+sy(3));
+  ctx.lineTo(cx+armOff+barLen, cy-cr+sy(3));
+  // Bottom-left hash
+  ctx.moveTo(cx-armOff, cy+cr-sy(3));
+  ctx.lineTo(cx-armOff, cy+cr-sy(3)-armLen);
+  ctx.moveTo(cx-armOff, cy+cr-sy(3));
+  ctx.lineTo(cx-armOff-barLen, cy+cr-sy(3));
+  // Bottom-right hash
+  ctx.moveTo(cx+armOff, cy+cr-sy(3));
+  ctx.lineTo(cx+armOff, cy+cr-sy(3)-armLen);
+  ctx.moveTo(cx+armOff, cy+cr-sy(3));
+  ctx.lineTo(cx+armOff+barLen, cy+cr-sy(3));
+  ctx.stroke();
+  // Lines on circle at 9 and 3 o'clock (inside)
+  ctx.beginPath();
+  ctx.moveTo(cx-cr, cy-sy(3)); ctx.lineTo(cx-cr, cy+sy(3));
+  ctx.moveTo(cx+cr, cy-sy(3)); ctx.lineTo(cx+cr, cy+sy(3));
+  ctx.stroke();
+}
+
+function drawTrap(glx, dir){
+  // Referee trapezoid behind goal
+  const tw = sy(11), tw2 = sy(7); // trapezoid: 22ft wide at goal, 14 at boards
+  const depth = sx(6) * dir; // 6ft out from goal line toward boards... wait should be AWAY from centre
+  // dir 1 = left goal, trap extends left (negative x from glx)
+  // dir -1 = right goal, trap extends right (positive x from glx)
+  const d = sx(6) * (-dir);
+  const cy = CH/2;
+  ctx.strokeStyle = '#cc000055'; ctx.lineWidth = sx(0.7); ctx.setLineDash([sx(1),sx(1)]);
+  ctx.beginPath();
+  ctx.moveTo(glx, cy-tw); ctx.lineTo(glx+d, cy-tw2);
+  ctx.moveTo(glx, cy+tw); ctx.lineTo(glx+d, cy+tw2);
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawCrease(gx, gy, dir){
+  // dir 1 = left goal, crease extends RIGHT (toward centre)
+  // dir -1 = right goal, crease extends LEFT
+  const cr = sx(R.creaseR);
+  ctx.fillStyle = 'rgba(140,195,255,0.45)';
+  ctx.strokeStyle = '#cc0000'; ctx.lineWidth = sx(0.8); ctx.setLineDash([]);
+  ctx.beginPath();
+  // Semicircle facing toward centre ice
+  if(dir===1){
+    ctx.arc(gx,gy,cr,-Math.PI/2,Math.PI/2);
+  } else {
+    ctx.arc(gx,gy,cr,Math.PI/2,-Math.PI/2);
+  }
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+
+function drawNet(gx, gy, dir){
+  // Net extends AWAY from centre (toward end board)
+  const hw = sy(R.netW/2);
+  const depth = sx(R.netD) * (-dir); // dir 1 → depth negative (left), dir -1 → positive (right)
+  const postR = sx(0.8);
+
+  ctx.setLineDash([]);
+  // Posts
+  ctx.fillStyle = '#cc2200';
+  ctx.beginPath(); ctx.arc(gx,gy-hw,postR,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(gx,gy+hw,postR,0,Math.PI*2); ctx.fill();
+
+  // Net frame
+  ctx.strokeStyle = '#cc2200'; ctx.lineWidth = sx(1.3);
+  ctx.beginPath();
+  ctx.moveTo(gx,gy-hw);
+  ctx.lineTo(gx+depth,gy-hw);
+  ctx.lineTo(gx+depth,gy+hw);
+  ctx.lineTo(gx,gy+hw);
+  ctx.stroke();
+
+  // Crossbar (on goal line between posts)
+  ctx.beginPath(); ctx.moveTo(gx,gy-hw); ctx.lineTo(gx,gy+hw); ctx.stroke();
+
+  // Net mesh
+  ctx.strokeStyle = '#cc220060'; ctx.lineWidth = sx(0.35);
+  for(let i=1;i<4;i++){
+    const x=gx+depth*i/4;
+    ctx.beginPath(); ctx.moveTo(x,gy-hw); ctx.lineTo(x,gy+hw); ctx.stroke();
+  }
+  for(let i=1;i<3;i++){
+    const y=gy-hw+(2*hw)*i/3;
+    ctx.beginPath(); ctx.moveTo(gx,y); ctx.lineTo(gx+depth,y); ctx.stroke();
+  }
+}
+
+// ── DRAW MOVES ───────────────────────────────────────────────
+function drawAllMoves(){
+  moves.forEach(mv=>{
+    const prog = animPlaying ? getMoveProgress(mv) : 1;
+    if(prog <= 0) return;
+    drawMoveLine(mv, prog);
+  });
+}
+
+function drawMoveLine(mv, prog){
+  const from = r2c(mv.from.x, mv.from.y);
+  const toFull = r2c(mv.to.x, mv.to.y);
+  const to = prog >= 1 ? toFull : {
+    x: from.x + (toFull.x - from.x)*prog,
+    y: from.y + (toFull.y - from.y)*prog
+  };
+  const dx=to.x-from.x, dy=to.y-from.y;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  if(len < 2) return;
+  const ang = Math.atan2(dy,dx);
+  const AS = Math.max(8, Math.min(18, CW/28));
+
+  ctx.save();
+  switch(mv.type){
+    case 'skate':     drawSkate(from,to,ang,AS,mv.color); break;
+    case 'skatePuck': drawSkatePuck(from,to,ang,AS,len,mv.color); break;
+    case 'pass':      drawPass(from,to,ang,AS); break;
+    case 'shot':      drawShot(from,to,ang,AS); break;
+  }
+  ctx.restore();
+}
+
+function arrow(x,y,ang,sz,color){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+  ctx.fillStyle=color; ctx.beginPath();
+  ctx.moveTo(0,0); ctx.lineTo(-sz,-sz*0.45); ctx.lineTo(-sz,sz*0.45);
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+function drawSkate(fr,to,ang,AS,color){
+  ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(fr.x,fr.y); ctx.lineTo(to.x,to.y); ctx.stroke();
+  arrow(to.x,to.y,ang,AS,color);
+}
+
+function drawSkatePuck(fr,to,ang,AS,len,color){
+  ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  const amp = Math.min(10, len*0.06+4);
+  const freq = Math.max(3, Math.min(6, len*0.04));
+  const steps = Math.max(30, Math.floor(len*0.8));
+  ctx.beginPath();
+  for(let i=0;i<=steps;i++){
+    const t=i/steps;
+    const px=fr.x+(to.x-fr.x)*t, py=fr.y+(to.y-fr.y)*t;
+    const wave=Math.sin(t*Math.PI*freq)*amp;
+    const wx=-Math.sin(ang)*wave, wy=Math.cos(ang)*wave;
+    if(i===0) ctx.moveTo(px+wx,py+wy); else ctx.lineTo(px+wx,py+wy);
+  }
+  ctx.stroke();
+  arrow(to.x,to.y,ang,AS,color);
+}
+
+function drawPass(fr,to,ang,AS){
+  ctx.strokeStyle='#00a8ff'; ctx.lineWidth=2.2;
+  ctx.setLineDash([sx(3),sx(2)]);
+  ctx.beginPath(); ctx.moveTo(fr.x,fr.y); ctx.lineTo(to.x,to.y); ctx.stroke();
+  ctx.setLineDash([]);
+  arrow(to.x,to.y,ang,AS,'#00a8ff');
+}
+
+function drawShot(fr,to,ang,AS){
+  ctx.strokeStyle='#ff4444'; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  const px=-Math.sin(ang)*3, py=Math.cos(ang)*3;
+  ctx.beginPath(); ctx.moveTo(fr.x+px,fr.y+py); ctx.lineTo(to.x+px,to.y+py); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(fr.x-px,fr.y-py); ctx.lineTo(to.x-px,to.y-py); ctx.stroke();
+  arrow(to.x,to.y,ang,AS,'#ff4444');
+}
+
+// Preview move being drawn
+function drawPreviewMove(){
+  if(!drawingMove) return;
+  const p = players.find(pl=>pl.id===drawingMove.playerId);
+  if(!p) return;
+  const canvRect = canvas.getBoundingClientRect();
+  const mx = mousePos.x - canvRect.left;
+  const my = mousePos.y - canvRect.top;
+  if(mx<0||my<0||mx>CW||my>CH) return;
+  const from = r2c(p.x,p.y);
+  const to = {x:mx, y:my};
+  const dx=to.x-from.x, dy=to.y-from.y;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  if(len<4) return;
+  const ang=Math.atan2(dy,dx);
+  const AS=Math.max(8,Math.min(18,CW/28));
+  const mvColor = p.color;
+  ctx.globalAlpha=0.6;
+  switch(drawingMove.type){
+    case 'skate': drawSkate(from,to,ang,AS,mvColor); break;
+    case 'skatePuck': drawSkatePuck(from,to,ang,AS,len,mvColor); break;
+    case 'pass': drawPass(from,to,ang,AS); break;
+    case 'shot': drawShot(from,to,ang,AS); break;
+  }
+  ctx.globalAlpha=1;
+}
+
+// ── DRAW PLAYERS ─────────────────────────────────────────────
+function drawPlayers(){
+  players.forEach(p=>{
+    const pos = animPlaying ? getAnimPos(p) : {x:p.x,y:p.y};
+    const cp = r2c(pos.x,pos.y);
+    const r = Math.max(14, Math.min(22, CW/24));
+    const isSel = p.id===selectedId && !animPlaying;
+
+    // Glow for selected
+    if(isSel){
+      ctx.shadowColor=p.color; ctx.shadowBlur=16;
+    }
+    ctx.fillStyle=p.color;
+    ctx.beginPath(); ctx.arc(cp.x,cp.y,r,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+
+    if(isSel){
+      ctx.strokeStyle='#fff'; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.arc(cp.x,cp.y,r,0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(cp.x,cp.y,r+5,0,Math.PI*2); ctx.stroke();
+    }
+
+    // Label
+    ctx.fillStyle = luma(p.color) > 160 ? '#111' : '#fff';
+    ctx.font = `800 ${Math.round(r*0.75)}px 'Segoe UI',sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(p.label, cp.x, cp.y);
+  });
+}
+
+function luma(hex){
+  const c=hex.replace('#','');
+  const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);
+  return 0.299*r+0.587*g+0.114*b;
+}
+
+// Draw dragging token
+function drawDragToken(){
+  if(!dragToken) return;
+  const rect = canvas.getBoundingClientRect();
+  const cx = mousePos.x - rect.left;
+  const cy = mousePos.y - rect.top;
+  if(cx<-30||cy<-30||cx>CW+30||cy>CH+30) return;
+  const r = Math.max(14,Math.min(22,CW/24));
+  ctx.fillStyle=dragToken.color; ctx.globalAlpha=0.85;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.fillStyle=luma(dragToken.color)>160?'#111':'#fff';
+  ctx.font=`800 ${Math.round(r*0.75)}px 'Segoe UI',sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(dragToken.label,cx,cy);
+}
+
+// ── ANIMATION ────────────────────────────────────────────────
+function getMoveDuration(mv){
+  const dx=mv.to.x-mv.from.x, dy=mv.to.y-mv.from.y;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  return (dist/28) / animSpeed;
+}
+
+function getPlayerTimeline(pid){
+  return moves.filter(m=>m.playerId===pid);
+}
+
+function getMoveStartTime(mv){
+  let t=0;
+  for(const m of getPlayerTimeline(mv.playerId)){
+    if(m.id===mv.id) return t;
+    t += getMoveDuration(m);
+  }
+  return t;
+}
+
+function getMoveProgress(mv){
+  const start = getMoveStartTime(mv);
+  const dur = getMoveDuration(mv);
+  if(dur<=0) return 1;
+  if(animTime < start) return 0;
+  if(animTime >= start+dur) return 1;
+  return (animTime-start)/dur;
+}
+
+function getAnimPos(p){
+  const timeline = getPlayerTimeline(p.id);
+  if(!timeline.length) return {x:p.x, y:p.y};
+  let elapsed=0;
+  for(const mv of timeline){
+    const dur=getMoveDuration(mv);
+    if(animTime < elapsed+dur){
+      const t=(animTime-elapsed)/dur;
+      return { x:mv.from.x+(mv.to.x-mv.from.x)*t, y:mv.from.y+(mv.to.y-mv.from.y)*t };
+    }
+    elapsed+=dur;
+  }
+  const last=timeline[timeline.length-1];
+  return {x:last.to.x, y:last.to.y};
+}
+
+function getTotalDuration(){
+  let max=0;
+  players.forEach(p=>{
+    let t=0;
+    getPlayerTimeline(p.id).forEach(mv=>{ t+=getMoveDuration(mv); });
+    max=Math.max(max,t);
+  });
+  return max||3;
+}
+
+function togglePlay(){
+  if(animPlaying){ pauseAnim(); return; }
+  if(!moves.length){ tip('Draw some moves first, then hit Play!'); return; }
+  animPlaying=true; animTime=0; animLastTs=null;
+  document.getElementById('playBtn').textContent='⏸ Pause';
+  requestAnimationFrame(animLoop);
+}
+function pauseAnim(){
+  animPlaying=false;
+  document.getElementById('playBtn').textContent='▶ Play';
+}
+function stopAnim(){
+  animPlaying=false; animTime=0;
+  if(animRaf) cancelAnimationFrame(animRaf);
+  document.getElementById('playBtn').textContent='▶ Play';
+  render();
+}
+function animLoop(ts){
+  if(!animPlaying) return;
+  if(animLastTs!==null){
+    animTime += (ts-animLastTs)/1000;
+    if(animTime >= getTotalDuration()){
+      animTime = getTotalDuration();
+      animPlaying=false;
+      document.getElementById('playBtn').textContent='▶ Play';
+    }
+  }
+  animLastTs=ts;
+  render();
+  if(animPlaying) requestAnimationFrame(animLoop);
+}
+
+// ── RENDER ───────────────────────────────────────────────────
+function render(){
+  drawRink();
+  drawAllMoves();
+  drawPreviewMove();
+  drawPlayers();
+  drawDragToken();
+}
+
+// ── CANVAS EVENTS ────────────────────────────────────────────
+function canvasXY(e){
+  const r=canvas.getBoundingClientRect();
+  return {cx:e.clientX-r.left, cy:e.clientY-r.top};
+}
+function playerAt(cx,cy){
+  const r=Math.max(14,Math.min(22,CW/24))+4;
+  return players.find(p=>{ const pos=r2c(p.x,p.y); const dx=cx-pos.x,dy=cy-pos.y; return dx*dx+dy*dy<=r*r; });
+}
+
+function onCDown(e){
+  if(animPlaying) return;
+  const {cx,cy}=canvasXY(e);
+  const rp=c2r(cx,cy);
+  const p=playerAt(cx,cy);
+
+  if(mode==='del'){
+    if(p){ players=players.filter(pl=>pl.id!==p.id); moves=moves.filter(m=>m.playerId!==p.id); selectedId=null; drawingMove=null; selInfo(null); render(); } return;
+  }
+  if(mode==='select'){
+    if(p){ dragPlayer=p; const pos=r2c(p.x,p.y); dragOff={x:cx-pos.x,y:cy-pos.y}; selectedId=p.id; selInfo(p); }
+    else { selectedId=null; drawingMove=null; selInfo(null); }
+    render(); return;
+  }
+
+  // Move-drawing modes
+  if(p){
+    // Start drawing from this player
+    selectedId=p.id; drawingMove={playerId:p.id,type:mode}; selInfo(p);
+    tip(`Drawing ${modeLabel(mode)} — click destination (or click another player first)`);
+  } else if(drawingMove){
+    // Complete move to this point
+    const src=players.find(pl=>pl.id===drawingMove.playerId);
+    if(src){
+      const from={x:src.x,y:src.y};
+      const to={x:clampX(rp.x),y:clamp(rp.y,0,R.H)};
+      const mid = getMidStart(src.id);
+      moves.push({id:'mv'+Date.now()+Math.random(),playerId:src.id,type:drawingMove.type,from,to,color:src.color});
+      src.x=to.x; src.y=to.y; // advance player to new position
+      tip(`Move added. Click another destination to chain, or click a new player.`);
+    }
+  } else {
+    selectedId=null; drawingMove=null; selInfo(null);
+  }
+  render();
+}
+
+function getMidStart(){ return 0; } // placeholder
+
+function clampX(x){ return Math.max(0,Math.min(iceType==='full'?R.W:R.W/2,x)); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+function onCMove(e){
+  if(animPlaying) return;
+  const {cx,cy}=canvasXY(e);
+  if(dragPlayer){
+    const newR=c2r(cx-dragOff.x,cy-dragOff.y);
+    dragPlayer.x=clampX(newR.x); dragPlayer.y=clamp(newR.y,0,R.H);
+    // Shift any existing moves for this player
+    render(); return;
+  }
+  if(drawingMove) render();
+}
+function onCUp(){ dragPlayer=null; }
+function onCLeave(){ dragPlayer=null; render(); }
+
+// ── GLOBAL MOUSE (token drag) ────────────────────────────────
+function onGMove(e){
+  mousePos={x:e.clientX,y:e.clientY};
+  if(dragToken||drawingMove) render();
+}
+function onGUp(e){
+  if(dragToken){
+    const rect=canvas.getBoundingClientRect();
+    const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
+    if(cx>=0&&cy>=0&&cx<=CW&&cy<=CH){
+      const rp=c2r(cx,cy);
+      const id='p'+Date.now()+Math.random();
+      players.push({id,label:dragToken.label,color:dragToken.color,x:clampX(rp.x),y:clamp(rp.y,0,R.H)});
+      selectedId=id; selInfo(players[players.length-1]);
+      tip(`${dragToken.label} placed! Select a move type then click to draw paths.`);
+    }
+    dragToken=null; render();
+  }
+}
+
+function startTokenDrag(e,pos){
+  e.preventDefault();
+  dragToken={label:pos.label,color:pos.color};
+  mousePos={x:e.clientX,y:e.clientY};
+  tip(`Drag ${pos.label} onto the ice`);
+}
+
+function cancelDraw(){
+  drawingMove=null; selectedId=null; selInfo(null); render();
+}
+
+// ── CONTROLS ─────────────────────────────────────────────────
+function setIce(type){
+  iceType=type; players=[]; moves=[]; selectedId=null; drawingMove=null;
+  document.querySelectorAll('.ice-btn').forEach((b,i)=>b.classList.toggle('active',(type==='full'&&i===0)||(type==='half'&&i===1)));
+  resize();
+}
+function setMode(m){
+  mode=m; drawingMove=null;
+  document.querySelectorAll('.move-btn').forEach(b=>b.classList.toggle('active',b.dataset.m===m));
+  const tips={select:'Click to select & drag players.',skate:'Click player → click destination.',skatePuck:'Click player → click destination (squiggly = puck carrier).',pass:'Click player → click destination (dotted = pass).',shot:'Click player → click destination (double line = shot).',del:'Click a player to remove them.'};
+  tip(tips[m]||'');
+}
+function modeLabel(m){return{skate:'Skate',skatePuck:'Skate w/Puck',pass:'Pass',shot:'Shot'}[m]||m;}
+function setSpeed(v){ animSpeed=parseFloat(v); document.getElementById('speedLbl').textContent=parseFloat(v).toFixed(2).replace(/\.?0+$/,'')+'x'; }
+function resetAll(){ players=[]; moves=[]; selectedId=null; drawingMove=null; stopAnim(); tip('Board cleared.'); render(); }
+function clearMoves(){ moves=[]; drawingMove=null; stopAnim(); tip('All moves cleared. Players stay in place.'); render(); }
+function tip(t){ document.getElementById('tipbar').textContent=t; }
+function selInfo(p){ const el=document.getElementById('selInfo'); if(p){el.textContent=`Selected: ${p.label}`;el.style.display='block';}else el.style.display='none'; }
+
+// ── MODAL ────────────────────────────────────────────────────
+function openModal(){ document.getElementById('modal').classList.add('open'); document.getElementById('customLbl').value=''; document.getElementById('customLbl').focus(); }
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+function addCustom(){
+  const lbl=document.getElementById('customLbl').value.trim().toUpperCase().slice(0,3);
+  if(!lbl) return;
+  const sel=document.querySelector('.cswatch.sel');
+  const color=sel?sel.style.background:PALETTE[0];
+  customPositions.push({label:lbl,color,name:lbl});
+  buildGrid(); closeModal();
+}
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal')) closeModal(); });
+document.getElementById('mOK').addEventListener('click',addCustom);
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('modal').classList.contains('open')) addCustom(); });
+
+init();
+</script>
+</body>
+</html>
