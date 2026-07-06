@@ -443,9 +443,9 @@ function drawLines(half, B){
   const glL=sx(R.goalLineX), glR=sx(R.W-R.goalLineX);
   const blL=sx(R.blueLineX), blR=sx(R.W-R.blueLineX);
   const cx2=CW/2, cy=CH/2;
-  const LW=Math.max(1.5, sx(1.5));        // thin line weight
-  const BLW=Math.max(1.9, sx(2.1));       // blue line width (25% thinner)
-  const CLW=Math.max(1.1, LW*0.75);       // faceoff circle stroke (25% thinner)
+  const LW=Math.max(1.1, sx(1.5)*0.75);   // thin line weight (25% thinner)
+  const BLW=Math.max(1.4, sx(2.1)*0.75);  // blue line width (25% thinner)
+  const CLW=Math.max(0.8, LW*0.75);       // faceoff circle stroke (25% thinner again)
 
   if(half==='full'){
     vline(glL,'#cc0000',LW,B); vline(glR,'#cc0000',LW,B);
