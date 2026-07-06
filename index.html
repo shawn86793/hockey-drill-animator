@@ -814,7 +814,7 @@ function drawPreviewMove(){
 // ─────────────────────────────────────────────
 function drawPlayers(){
   players.forEach(p=>{
-    const pos=animPlaying?getAnimPos(p):{x:p.x,y:p.y};
+    const pos=animPlaying?getAnimPos(p):getPlayerLogicalPos(p);
     const cp=r2c(pos.x,pos.y);
     const r=Math.max(8,Math.min(13,Math.round(CW/37)));
     const isSel=p.id===selectedId&&!animPlaying;
@@ -951,7 +951,7 @@ function render(){
 function canvasXY(e){ const r=canvas.getBoundingClientRect(); return{cx:e.clientX-r.left,cy:e.clientY-r.top}; }
 function playerAt(cx,cy){
   const r=Math.max(8,Math.min(13,Math.round(CW/37)))+5;
-  return players.find(p=>{ const pos=r2c(p.x,p.y); const dx=cx-pos.x,dy=cy-pos.y; return dx*dx+dy*dy<=r*r; });
+  return players.find(p=>{ const lp=animPlaying?getAnimPos(p):getPlayerLogicalPos(p); const pos=r2c(lp.x,lp.y); const dx=cx-pos.x,dy=cy-pos.y; return dx*dx+dy*dy<=r*r; });
 }
 
 function onCDown(e){
@@ -968,7 +968,7 @@ function onCDown(e){
     return;
   }
   if(mode==='select'){
-    if(p){ dragPlayer=p; const pos=r2c(p.x,p.y); dragOff={x:cx-pos.x,y:cy-pos.y}; selectedId=p.id; selInfo(p); }
+    if(p){ dragPlayer=p; const lp=getPlayerLogicalPos(p); const pos=r2c(lp.x,lp.y); dragOff={x:cx-pos.x,y:cy-pos.y}; selectedId=p.id; selInfo(p); }
     else { selectedId=null; selInfo(null); }
     render(); return;
   }
