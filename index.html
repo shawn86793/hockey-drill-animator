@@ -440,27 +440,25 @@ function drawLines(half, B){
   const glL=sx(R.goalLineX), glR=sx(R.W-R.goalLineX);
   const blL=sx(R.blueLineX), blR=sx(R.W-R.blueLineX);
   const cx2=CW/2, cy=CH/2;
-  const LW=Math.max(1.5, sx(1.5));   // thin line weight (goal lines, circles)
+  const LW=Math.max(1.5, sx(1.5));   // thin line weight
   const BLW=Math.max(2.5, sx(2.8));  // blue line weight
 
   if(half==='full'){
-    // ── Goal lines (thin solid red) ──
     vline(glL,'#cc0000',LW,B); vline(glR,'#cc0000',LW,B);
-
-    // ── Blue lines (solid blue) ──
     vline(blL,'#1a4ab0',BLW,B); vline(blR,'#1a4ab0',BLW,B);
 
-    // ── Centre line: dashed red (matches template) ──
-    ctx.strokeStyle='#cc0000'; ctx.lineWidth=LW;
-    ctx.setLineDash([sy(4), sy(3.5)]);
+    // Centre line: solid red band with white dashes on top (exact template)
+    const clW=Math.max(3,sx(1.8));
+    ctx.fillStyle='#cc0000';
+    ctx.fillRect(cx2-clW/2, B, clW, CH-B*2);
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=clW*0.65;
+    ctx.setLineDash([sy(4.5),sy(3.5)]);
     ctx.beginPath(); ctx.moveTo(cx2,B); ctx.lineTo(cx2,CH-B); ctx.stroke();
     ctx.setLineDash([]);
 
-    // ── Centre circle (blue, outline only) ──
     circle(cx2,cy,sx(R.circleR),'#1a4ab0',LW);
     dot(cx2,cy,sx(1.3),'#cc0000');
 
-    // ── End-zone faceoff circles ──
     const eys=R.ezFOy.map(y=>sy(y));
     [[glL+sx(R.ezFOxOff),eys[0]],[glL+sx(R.ezFOxOff),eys[1]],
      [glR-sx(R.ezFOxOff),eys[0]],[glR-sx(R.ezFOxOff),eys[1]]].forEach(([fx,fy])=>{
@@ -469,17 +467,14 @@ function drawLines(half, B){
       dot(fx,fy,sx(1.3),'#cc0000');
     });
 
-    // ── Neutral-zone dots only (no circles) ──
     const nys=R.nzFOy.map(y=>sy(y));
     [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]],
      [blR-sx(R.nzFOxOff),nys[0]],[blR-sx(R.nzFOxOff),nys[1]]].forEach(([fx,fy])=>dot(fx,fy,sx(1.3),'#cc0000'));
 
-    // ── Creases & nets ──
     drawCrease(glL,cy,1); drawNet(glL,cy,1);
     drawCrease(glR,cy,-1); drawNet(glR,cy,-1);
 
   } else {
-    // ── Half ice ──
     vline(glL,'#cc0000',LW,B);
     vline(blL,'#1a4ab0',BLW,B);
 
@@ -491,17 +486,16 @@ function drawLines(half, B){
       dot(x,y,sx(1.3),'#cc0000');
     });
 
-    // NZ dots
     const nys=R.nzFOy.map(y=>sy(y));
     [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]]].forEach(([x,y])=>dot(x,y,sx(1.3),'#cc0000'));
 
-    // Partial centre circle at right edge (clipping already active)
+    // Partial centre circle at right edge
     circle(CW,cy,sx(R.circleR),'#1a4ab0',LW);
     dot(CW,cy,sx(1.3),'#cc0000');
 
-    // Right edge: dashed red centre line (matches template)
+    // Right edge: dashed red line (template shows dashes, not solid band)
     ctx.strokeStyle='#cc0000'; ctx.lineWidth=LW;
-    ctx.setLineDash([sy(4),sy(3.5)]);
+    ctx.setLineDash([sy(4.5),sy(3.5)]);
     ctx.beginPath(); ctx.moveTo(CW,B); ctx.lineTo(CW,CH-B); ctx.stroke();
     ctx.setLineDash([]);
 
@@ -522,29 +516,41 @@ function dot(x,y,r,c){
 }
 
 function hashMarks(cx,cy){
+  // Exact match to template:
+  // - 2 tick marks at top of circle boundary pointing inward
+  // - 2 tick marks at bottom pointing inward
+  // - 4 L-brackets near center forming a # (hashtag) pattern
   const cr=sx(R.circleR);
   const lw=Math.max(1,sx(1));
   ctx.strokeStyle='#cc0000'; ctx.lineWidth=lw; ctx.setLineDash([]);
 
-  // Two tick marks at top of circle, two at bottom — pointing inward
-  // Separated by ~2ft each side of center axis, ~3ft long
-  const ts=sx(2.0);   // horizontal offset each side
-  const tl=sy(3.2);   // tick length inward from circle boundary
+  // Tick marks at top & bottom of circle (2 per end, pointing inward)
+  const ts=sx(1.8);  // horizontal distance each side of 12/6 o'clock
+  const tl=sy(3.0);  // how far they extend inward from the circle rim
 
-  // Four cross arms near center — simple plus, no caps
-  // Arms start ~1.5ft from center, extend ~4ft
-  const gap=sx(1.5);
-  const arm=sx(4.0);
+  // L-brackets forming # pattern around dot
+  // Each L has a horizontal arm and a vertical arm meeting at a corner
+  // The 4 corners sit symmetrically around the center dot
+  const hx=sx(1.8);  // horizontal offset of bracket corner from center
+  const vy=sy(1.8);  // vertical offset of bracket corner from center
+  const ha=sx(3.5);  // horizontal arm length
+  const va=sy(3.0);  // vertical arm length
 
   ctx.beginPath();
-  ctx.moveTo(cx-ts, cy-cr);       ctx.lineTo(cx-ts, cy-cr+tl);
-  ctx.moveTo(cx+ts, cy-cr);       ctx.lineTo(cx+ts, cy-cr+tl);
-  ctx.moveTo(cx-ts, cy+cr);       ctx.lineTo(cx-ts, cy+cr-tl);
-  ctx.moveTo(cx+ts, cy+cr);       ctx.lineTo(cx+ts, cy+cr-tl);
-  ctx.moveTo(cx-gap-arm, cy);     ctx.lineTo(cx-gap, cy);
-  ctx.moveTo(cx+gap, cy);         ctx.lineTo(cx+gap+arm, cy);
-  ctx.moveTo(cx, cy-gap-arm);     ctx.lineTo(cx, cy-gap);
-  ctx.moveTo(cx, cy+gap);         ctx.lineTo(cx, cy+gap+arm);
+  // Top ticks
+  ctx.moveTo(cx-ts, cy-cr); ctx.lineTo(cx-ts, cy-cr+tl);
+  ctx.moveTo(cx+ts, cy-cr); ctx.lineTo(cx+ts, cy-cr+tl);
+  // Bottom ticks
+  ctx.moveTo(cx-ts, cy+cr); ctx.lineTo(cx-ts, cy+cr-tl);
+  ctx.moveTo(cx+ts, cy+cr); ctx.lineTo(cx+ts, cy+cr-tl);
+  // Top-left L bracket  ┘ (arms go right and down toward center)
+  ctx.moveTo(cx-hx-ha, cy-vy); ctx.lineTo(cx-hx, cy-vy); ctx.lineTo(cx-hx, cy-vy-va);
+  // Top-right L bracket └ (arms go left and down toward center)
+  ctx.moveTo(cx+hx+ha, cy-vy); ctx.lineTo(cx+hx, cy-vy); ctx.lineTo(cx+hx, cy-vy-va);
+  // Bottom-left L bracket ┐ (arms go right and up toward center)
+  ctx.moveTo(cx-hx-ha, cy+vy); ctx.lineTo(cx-hx, cy+vy); ctx.lineTo(cx-hx, cy+vy+va);
+  // Bottom-right L bracket ┌ (arms go left and up toward center)
+  ctx.moveTo(cx+hx+ha, cy+vy); ctx.lineTo(cx+hx, cy+vy); ctx.lineTo(cx+hx, cy+vy+va);
   ctx.stroke();
 }
 
