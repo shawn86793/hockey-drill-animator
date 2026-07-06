@@ -450,13 +450,10 @@ function drawLines(half, B){
     // ── Blue lines (solid blue) ──
     vline(blL,'#1a4ab0',BLW,B); vline(blR,'#1a4ab0',BLW,B);
 
-    // ── Centre line: solid red band + white dashes ──
-    const clW = Math.max(4, sx(2.2));
-    ctx.fillStyle='#cc0000';
-    ctx.fillRect(cx2-clW/2, B, clW, CH-B*2);
-    ctx.strokeStyle='#ffffff'; ctx.lineWidth=Math.max(1.5, sx(1.1));
-    ctx.setLineDash([sy(3.5), sy(3)]);
-    ctx.beginPath(); ctx.moveTo(cx2, B+1); ctx.lineTo(cx2, CH-B-1); ctx.stroke();
+    // ── Centre line: dashed red (matches template) ──
+    ctx.strokeStyle='#cc0000'; ctx.lineWidth=LW;
+    ctx.setLineDash([sy(4), sy(3.5)]);
+    ctx.beginPath(); ctx.moveTo(cx2,B); ctx.lineTo(cx2,CH-B); ctx.stroke();
     ctx.setLineDash([]);
 
     // ── Centre circle (blue, outline only) ──
@@ -502,13 +499,10 @@ function drawLines(half, B){
     circle(CW,cy,sx(R.circleR),'#1a4ab0',LW);
     dot(CW,cy,sx(1.3),'#cc0000');
 
-    // Right edge: centre line (red band + white dashes)
-    const clW=Math.max(4,sx(2.2));
-    ctx.fillStyle='#cc0000';
-    ctx.fillRect(CW-clW/2, B, clW, CH-B*2);
-    ctx.strokeStyle='#ffffff'; ctx.lineWidth=Math.max(1.5,sx(1.1));
-    ctx.setLineDash([sy(3.5),sy(3)]);
-    ctx.beginPath(); ctx.moveTo(CW, B+1); ctx.lineTo(CW, CH-B-1); ctx.stroke();
+    // Right edge: dashed red centre line (matches template)
+    ctx.strokeStyle='#cc0000'; ctx.lineWidth=LW;
+    ctx.setLineDash([sy(4),sy(3.5)]);
+    ctx.beginPath(); ctx.moveTo(CW,B); ctx.lineTo(CW,CH-B); ctx.stroke();
     ctx.setLineDash([]);
 
     drawCrease(glL,cy,1); drawNet(glL,cy,1);
@@ -528,40 +522,29 @@ function dot(x,y,r,c){
 }
 
 function hashMarks(cx,cy){
-  // Matches template: tick marks at top/bottom of circle, crosshair near center
   const cr=sx(R.circleR);
-  const lw=Math.max(1,sx(1.1));
+  const lw=Math.max(1,sx(1));
   ctx.strokeStyle='#cc0000'; ctx.lineWidth=lw; ctx.setLineDash([]);
 
-  // Tick marks flanking top & bottom of circle boundary
-  const tickSep=sx(2.8);   // horizontal offset from circle center
-  const tickLen=sy(4.5);   // length pointing inward
+  // Two tick marks at top of circle, two at bottom — pointing inward
+  // Separated by ~2ft each side of center axis, ~3ft long
+  const ts=sx(2.0);   // horizontal offset each side
+  const tl=sy(3.2);   // tick length inward from circle boundary
+
+  // Four cross arms near center — simple plus, no caps
+  // Arms start ~1.5ft from center, extend ~4ft
+  const gap=sx(1.5);
+  const arm=sx(4.0);
 
   ctx.beginPath();
-  ctx.moveTo(cx-tickSep, cy-cr); ctx.lineTo(cx-tickSep, cy-cr+tickLen);
-  ctx.moveTo(cx+tickSep, cy-cr); ctx.lineTo(cx+tickSep, cy-cr+tickLen);
-  ctx.moveTo(cx-tickSep, cy+cr); ctx.lineTo(cx-tickSep, cy+cr-tickLen);
-  ctx.moveTo(cx+tickSep, cy+cr); ctx.lineTo(cx+tickSep, cy+cr-tickLen);
-  ctx.stroke();
-
-  // Inner crosshair (4 arms from center, each with a perpendicular cap)
-  const arm=sx(4.5);   // arm length
-  const cap=sy(2.5);   // perpendicular cap at each arm tip
-  const gap=sx(2);     // gap from center before arm starts
-
-  ctx.beginPath();
-  // Left arm
-  ctx.moveTo(cx-gap,cy); ctx.lineTo(cx-gap-arm,cy);
-  ctx.moveTo(cx-gap-arm,cy-cap); ctx.lineTo(cx-gap-arm,cy+cap);
-  // Right arm
-  ctx.moveTo(cx+gap,cy); ctx.lineTo(cx+gap+arm,cy);
-  ctx.moveTo(cx+gap+arm,cy-cap); ctx.lineTo(cx+gap+arm,cy+cap);
-  // Top arm
-  ctx.moveTo(cx,cy-gap); ctx.lineTo(cx,cy-gap-arm);
-  ctx.moveTo(cx-cap,cy-gap-arm); ctx.lineTo(cx+cap,cy-gap-arm);
-  // Bottom arm
-  ctx.moveTo(cx,cy+gap); ctx.lineTo(cx,cy+gap+arm);
-  ctx.moveTo(cx-cap,cy+gap+arm); ctx.lineTo(cx+cap,cy+gap+arm);
+  ctx.moveTo(cx-ts, cy-cr);       ctx.lineTo(cx-ts, cy-cr+tl);
+  ctx.moveTo(cx+ts, cy-cr);       ctx.lineTo(cx+ts, cy-cr+tl);
+  ctx.moveTo(cx-ts, cy+cr);       ctx.lineTo(cx-ts, cy+cr-tl);
+  ctx.moveTo(cx+ts, cy+cr);       ctx.lineTo(cx+ts, cy+cr-tl);
+  ctx.moveTo(cx-gap-arm, cy);     ctx.lineTo(cx-gap, cy);
+  ctx.moveTo(cx+gap, cy);         ctx.lineTo(cx+gap+arm, cy);
+  ctx.moveTo(cx, cy-gap-arm);     ctx.lineTo(cx, cy-gap);
+  ctx.moveTo(cx, cy+gap);         ctx.lineTo(cx, cy+gap+arm);
   ctx.stroke();
 }
 
