@@ -794,7 +794,7 @@ function drawPlayers(){
   players.forEach(p=>{
     const pos=animPlaying?getAnimPos(p):{x:p.x,y:p.y};
     const cp=r2c(pos.x,pos.y);
-    const r=Math.max(14,Math.min(22,CW/22));
+    const r=Math.max(8,Math.min(13,Math.round(CW/37)));
     const isSel=p.id===selectedId&&!animPlaying;
 
     if(isSel){ ctx.shadowColor=p.color; ctx.shadowBlur=14; }
@@ -827,7 +827,7 @@ function drawDragToken(){
   const rect=canvas.getBoundingClientRect();
   const cx=mousePos.x-rect.left, cy=mousePos.y-rect.top;
   if(cx<-40||cy<-40||cx>CW+40||cy>CH+40) return;
-  const r=Math.max(14,Math.min(22,CW/22));
+  const r=Math.max(8,Math.min(13,Math.round(CW/37)));
   ctx.globalAlpha=0.8; ctx.fillStyle=dragToken.color;
   ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
   ctx.globalAlpha=1;
@@ -854,17 +854,33 @@ function getMoveProgress(mv){
   if(animTime>=st+dur) return 1;
   return (animTime-st)/dur;
 }
+// Where a player will be after all their skate/skatePuck moves complete
+// (used as starting point when drawing a new path)
+function getPlayerLogicalPos(p){
+  let pos={x:p.x,y:p.y};
+  for(const mv of getPlayerTimeline(p.id)){
+    if(mv.type==='skate'||mv.type==='skatePuck')
+      pos=mv.waypoints[mv.waypoints.length-1];
+  }
+  return pos;
+}
+
 function getAnimPos(p){
   const tl=getPlayerTimeline(p.id);
   if(!tl.length) return{x:p.x,y:p.y};
-  let elapsed=0;
+  let elapsed=0, pos={x:p.x,y:p.y};
   for(const mv of tl){
     const dur=getMoveDuration(mv);
-    if(animTime<elapsed+dur) return pointOnPath(mv.waypoints,dur>0?(animTime-elapsed)/dur:1);
+    if(mv.type==='skate'||mv.type==='skatePuck'){
+      // Player moves along this path
+      if(animTime<elapsed+dur)
+        return pointOnPath(mv.waypoints, dur>0?(animTime-elapsed)/dur:1);
+      pos=mv.waypoints[mv.waypoints.length-1];
+    }
+    // Pass/shot: player stays still, time still advances
     elapsed+=dur;
   }
-  const last=tl[tl.length-1];
-  return last.waypoints[last.waypoints.length-1];
+  return pos;
 }
 function getTotalDuration(){
   let max=0;
@@ -912,7 +928,7 @@ function render(){
 // ─────────────────────────────────────────────
 function canvasXY(e){ const r=canvas.getBoundingClientRect(); return{cx:e.clientX-r.left,cy:e.clientY-r.top}; }
 function playerAt(cx,cy){
-  const r=Math.max(14,Math.min(22,CW/22))+5;
+  const r=Math.max(8,Math.min(13,Math.round(CW/37)))+5;
   return players.find(p=>{ const pos=r2c(p.x,p.y); const dx=cx-pos.x,dy=cy-pos.y; return dx*dx+dy*dy<=r*r; });
 }
 
@@ -937,7 +953,9 @@ function onCDown(e){
   // Draw modes
   if(p){
     selectedId=p.id; isDrawing=true;
-    currentWaypoints=[{x:p.x,y:p.y}];
+    // Start path from player's logical position (end of last skate move, or placed pos)
+    const startPos=getPlayerLogicalPos(p);
+    currentWaypoints=[{x:startPos.x,y:startPos.y}];
     drawingMove={playerId:p.id,type:mode};
     selInfo(p);
     tip(`Drag to draw ${modeLabel(mode)} path — release to finish`);
@@ -969,8 +987,7 @@ function finishDraw(){
     const src=players.find(pl=>pl.id===drawingMove.playerId);
     if(src){
       const simp=simplifyPath(currentWaypoints,1.2);
-      const last=simp[simp.length-1];
-      src.x=last.x; src.y=last.y;
+      // Player icon stays at placed position — only moves during animation
       moves.push({id:'mv'+Date.now()+Math.random(),playerId:src.id,type:drawingMove.type,waypoints:simp,color:src.color});
       tip(`${modeLabel(drawingMove.type)} path added. Click player again to chain another move.`);
     }
