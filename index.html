@@ -60,11 +60,28 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 .hint{font-size:9px;color:#2a4a5a;line-height:1.7}
 .hint strong{color:#3a6a8a}
 
-/* ── CANVAS ── */
-#canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a1a2a,#030810);position:relative;overflow:hidden;min-width:0}
+/* ── CANVAS WRAP ── */
+#canvas-wrap{flex:1;display:flex;background:radial-gradient(ellipse at center,#0a1a2a,#030810);overflow:hidden;min-width:0;gap:12px;padding:12px}
+#canvas-wrap.full-mode{flex-direction:column;align-items:center}
+#canvas-wrap.half-mode{flex-direction:row;align-items:stretch}
+
+/* ── RINK SECTION ── */
+#rink-section{position:relative;display:flex;align-items:center;justify-content:center}
+.full-mode #rink-section{flex:1;width:100%;min-height:0}
+.half-mode #rink-section{flex:0 0 58%;min-width:0}
+
 #rinkCanvas{display:block;cursor:crosshair}
 #tipbar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,10,20,.88);border:1px solid #0d3050;color:#4a8ab0;padding:5px 16px;border-radius:20px;font-size:11px;pointer-events:none;white-space:nowrap;max-width:90%}
 #selInfo{position:absolute;top:10px;right:10px;background:rgba(0,168,255,.12);border:1px solid #00a8ff55;border-radius:8px;padding:6px 12px;font-size:11px;color:#00d4ff;display:none}
+
+/* ── INFO PANEL ── */
+#info-panel{background:rgba(0,0,0,.25);border:1px solid #1a3a5a;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.full-mode #info-panel{width:100%;flex:0 0 180px}
+.half-mode #info-panel{flex:1;min-width:0}
+.info-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#00a8ff;padding-bottom:6px;border-bottom:1px solid #0d2035;flex-shrink:0}
+#playInfo{flex:1;background:rgba(255,255,255,.03);border:1px solid #0d2a40;border-radius:7px;color:#b8d4ec;font-size:13px;font-family:'Segoe UI',sans-serif;resize:none;outline:none;line-height:1.7;padding:10px 12px;width:100%}
+#playInfo:focus{border-color:#1a4a6a;background:rgba(255,255,255,.05)}
+#playInfo::placeholder{color:#244a62}
 
 /* ── MODAL ── */
 #modal{display:none;position:fixed;inset:0;background:rgba(0,5,15,.8);z-index:200;align-items:center;justify-content:center}
@@ -175,10 +192,16 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 
   </div>
 
-  <div id="canvas-wrap">
-    <canvas id="rinkCanvas"></canvas>
-    <div id="selInfo"></div>
-    <div id="tipbar">Click + or drag a player token onto the ice to begin</div>
+  <div id="canvas-wrap" class="full-mode">
+    <div id="rink-section">
+      <canvas id="rinkCanvas"></canvas>
+      <div id="selInfo"></div>
+      <div id="tipbar">Click + or drag a player token onto the ice to begin</div>
+    </div>
+    <div id="info-panel">
+      <div class="info-hdr">Play Information</div>
+      <textarea id="playInfo" placeholder="Drill name, play description, coaching notes, player instructions..."></textarea>
+    </div>
   </div>
 </div>
 
@@ -355,10 +378,9 @@ function buildPalette(){
 // RESIZE & COORDS
 // ─────────────────────────────────────────────
 function resize(){
-  const wrap = document.getElementById('canvas-wrap');
-  const aw = wrap.clientWidth-24, ah = wrap.clientHeight-24;
+  const section = document.getElementById('rink-section');
+  const aw = section.clientWidth-8, ah = section.clientHeight-8;
   const rW = iceType==='full'?R.W:R.W/2;
-  // 25% wider: scale so the wider canvas still fits available space
   const scale = Math.min(aw/(rW*1.25), ah/(R.H*1.5));
   CW = Math.round(rW*scale*1.25); CH = Math.round(R.H*scale*1.5);
   canvas.width=CW; canvas.height=CH;
@@ -1035,6 +1057,7 @@ function onGUp(e){
 function setIce(type){
   iceType=type; players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null;
   document.querySelectorAll('.ice-btn').forEach((b,i)=>b.classList.toggle('active',(type==='full'&&i===0)||(type==='half'&&i===1)));
+  document.getElementById('canvas-wrap').className = type==='full' ? 'full-mode' : 'half-mode';
   buildGrid(); resize();
 }
 function setMode(m){
