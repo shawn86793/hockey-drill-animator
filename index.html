@@ -555,32 +555,70 @@ function hashMarks(cx,cy){
 }
 
 function drawCrease(gx,gy,dir){
+  // Blue filled semicircle — flat edge at goal line, curved toward center ice
   const cr=circR(R.creaseR);
-  ctx.fillStyle='rgba(163,210,255,0.7)';
-  ctx.strokeStyle='#1a4ab0'; ctx.lineWidth=Math.max(1,sx(1.1)); ctx.setLineDash([]);
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(163,210,255,0.75)';
+  ctx.strokeStyle='#1a4ab0';
+  ctx.lineWidth=Math.max(0.8,sx(0.9)*0.75);
   ctx.beginPath();
-  if(dir===1){ ctx.arc(gx,gy,cr,-Math.PI/2,Math.PI/2); }
-  else        { ctx.arc(gx,gy,cr,Math.PI/2,-Math.PI/2); }
+  if(dir===1) ctx.arc(gx,gy,cr,-Math.PI/2,Math.PI/2);   // left end: opens right
+  else        ctx.arc(gx,gy,cr,Math.PI/2,-Math.PI/2);    // right end: opens left
   ctx.closePath(); ctx.fill(); ctx.stroke();
 }
 
 function drawNet(gx,gy,dir){
-  // dir=1: left net (extends left from goal line), dir=-1: right net (extends right)
-  const hw=sy(R.netW/2), depth=sx(R.netD)*(-dir);
+  // dir= 1: left net  (back extends LEFT  of goal line)
+  // dir=-1: right net (back extends RIGHT of goal line)
+  const hw  = sy(R.netW/2);           // 3ft each side of center
+  const bx  = gx + sx(R.netD)*(-dir); // x-position of back wall
+  const fr  = Math.min(sy(1.0), Math.abs(bx-gx)*0.3); // rounded corner radius
+
   ctx.setLineDash([]);
-  // Net frame
-  ctx.strokeStyle='#222'; ctx.lineWidth=Math.max(1.5,sx(1.2));
-  ctx.beginPath();
-  ctx.moveTo(gx,gy-hw); ctx.lineTo(gx+depth,gy-hw);
-  ctx.lineTo(gx+depth,gy+hw); ctx.lineTo(gx,gy+hw);
+
+  // Build the net path (U-shape with rounded back corners)
+  function netPath(){
+    ctx.beginPath();
+    ctx.moveTo(gx, gy-hw);
+    if(dir===1){
+      // top rail → rounded top-left corner → back wall → rounded bottom-left → bottom rail
+      ctx.lineTo(bx+fr, gy-hw);
+      ctx.arcTo(bx, gy-hw, bx, gy-hw+fr, fr);
+      ctx.lineTo(bx, gy+hw-fr);
+      ctx.arcTo(bx, gy+hw, bx+fr, gy+hw, fr);
+    } else {
+      // top rail → rounded top-right corner → back wall → rounded bottom-right → bottom rail
+      ctx.lineTo(bx-fr, gy-hw);
+      ctx.arcTo(bx, gy-hw, bx, gy-hw+fr, fr);
+      ctx.lineTo(bx, gy+hw-fr);
+      ctx.arcTo(bx, gy+hw, bx-fr, gy+hw, fr);
+    }
+    ctx.lineTo(gx, gy+hw);
+  }
+
+  // Light interior fill
+  netPath(); ctx.closePath();
+  ctx.fillStyle='rgba(245,245,245,0.85)'; ctx.fill();
+
+  // Net frame (dark)
+  netPath();
+  ctx.strokeStyle='#222'; ctx.lineWidth=Math.max(1.2,sx(1));
   ctx.stroke();
-  // Goal line across posts
-  ctx.strokeStyle='#cc0000'; ctx.lineWidth=Math.max(1.5,sx(1.5));
-  ctx.beginPath(); ctx.moveTo(gx,gy-hw); ctx.lineTo(gx,gy+hw); ctx.stroke();
-  // Mesh
-  ctx.strokeStyle='rgba(0,0,0,0.18)'; ctx.lineWidth=Math.max(0.5,sx(0.4));
-  for(let i=1;i<4;i++){ const x=gx+depth*i/4; ctx.beginPath(); ctx.moveTo(x,gy-hw); ctx.lineTo(x,gy+hw); ctx.stroke(); }
-  for(let i=1;i<3;i++){ const y=gy-hw+(hw*2)*i/3; ctx.beginPath(); ctx.moveTo(gx,y); ctx.lineTo(gx+depth,y); ctx.stroke(); }
+
+  // Red goal posts at goal mouth
+  dot(gx, gy-hw, circR(0.55), '#cc2200');
+  dot(gx, gy+hw, circR(0.55), '#cc2200');
+
+  // Subtle mesh inside
+  ctx.strokeStyle='rgba(0,0,0,0.13)'; ctx.lineWidth=0.6;
+  for(let i=1;i<4;i++){
+    const mx=gx+(bx-gx)*i/4;
+    ctx.beginPath(); ctx.moveTo(mx,gy-hw); ctx.lineTo(mx,gy+hw); ctx.stroke();
+  }
+  for(let i=1;i<3;i++){
+    const my=gy-hw+(hw*2)*i/3;
+    ctx.beginPath(); ctx.moveTo(gx,my); ctx.lineTo(bx,my); ctx.stroke();
+  }
 }
 
 // ─────────────────────────────────────────────
