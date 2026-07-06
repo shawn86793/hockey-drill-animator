@@ -8,57 +8,65 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#060d16;color:#fff;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
 
+/* ── HEADER ── */
 #header{background:linear-gradient(135deg,#071422,#0d2035);border-bottom:2px solid #00a8ff;padding:6px 16px;display:flex;align-items:center;gap:14px;height:58px;flex-shrink:0}
-#logo-wrap{width:44px;height:44px;flex-shrink:0}
 #title{font-size:18px;font-weight:800;letter-spacing:1px;background:linear-gradient(90deg,#fff 40%,#00a8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .subtitle{font-size:10px;color:#4a7fa0;letter-spacing:2px;text-transform:uppercase}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
 .ice-toggle{display:flex;background:#071422;border:1px solid #1a4a6a;border-radius:20px;overflow:hidden}
-.ice-btn{padding:6px 18px;cursor:pointer;font-size:12px;font-weight:600;color:#5a8aaa;border:none;background:transparent;transition:all .2s;letter-spacing:.5px}
+.ice-btn{padding:6px 18px;cursor:pointer;font-size:12px;font-weight:600;color:#5a8aaa;border:none;background:transparent;transition:all .2s}
 .ice-btn.active{background:linear-gradient(135deg,#0066cc,#00a8ff);color:#fff}
 
+/* ── LAYOUT ── */
 #main{display:flex;flex:1;overflow:hidden;min-height:0}
+#sidebar{width:196px;background:#071422;border-right:1px solid #0d2035;display:flex;flex-direction:column;padding:10px;gap:10px;overflow-y:auto;flex-shrink:0}
+.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#00a8ff;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid #0d2035}
 
-#sidebar{width:190px;background:#071422;border-right:1px solid #0d2035;display:flex;flex-direction:column;padding:10px;gap:12px;overflow-y:auto;flex-shrink:0}
-.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#00a8ff;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #0d2035}
-
-.positions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-.pos-token{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:grab;border:2px solid transparent;transition:transform .15s,box-shadow .2s}
+/* ── PLAYERS PANEL ── */
+.pos-row{display:flex;align-items:center;gap:6px;padding:4px 0}
+.pos-token{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;cursor:grab;border:2px solid transparent;flex-shrink:0;transition:transform .12s}
 .pos-token:hover{transform:scale(1.12)}
 .pos-token:active{cursor:grabbing}
+.pos-info{flex:1;min-width:0}
+.pos-name{font-size:10px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pos-count{font-size:9px;color:#4a7a9a;margin-top:1px}
+.pos-add{width:22px;height:22px;border-radius:50%;border:1px solid #1a4a6a;background:#0a1a28;color:#4a8ab0;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.pos-add:hover{background:#00a8ff22;border-color:#00a8ff;color:#00a8ff}
 
+#addCustomBtn{width:100%;margin-top:4px;padding:6px;border-radius:20px;border:1px dashed #1a4a6a;background:transparent;color:#3a8ab8;cursor:pointer;font-size:11px;transition:all .2s}
+#addCustomBtn:hover{background:#00a8ff14;color:#00a8ff;border-color:#00a8ff}
+
+/* ── MOVE TYPES ── */
 .move-types{display:flex;flex-direction:column;gap:4px}
-.move-btn{padding:7px 9px;border-radius:7px;border:1px solid #0d2035;background:#0a1a28;color:#6a9ab8;cursor:pointer;font-size:11px;display:flex;align-items:center;gap:7px;transition:all .15s;text-align:left}
+.move-btn{padding:6px 8px;border-radius:7px;border:1px solid #0d2035;background:#0a1a28;color:#6a9ab8;cursor:pointer;font-size:11px;display:flex;align-items:center;gap:7px;transition:all .15s;text-align:left;width:100%}
 .move-btn:hover{border-color:#00a8ff44;color:#c0dff0}
 .move-btn.active{background:#00a8ff18;border-color:#00a8ff;color:#00d4ff}
 .move-icon{width:34px;height:14px;flex-shrink:0}
 
+/* ── CONTROLS ── */
 .speed-sec{display:flex;flex-direction:column;gap:5px}
 .speed-row{display:flex;justify-content:space-between;font-size:10px;color:#4a7a9a}
-input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
-
+input[type=range]{width:100%;accent-color:#00a8ff}
 .play-row{display:flex;gap:5px;margin-bottom:5px}
 .pbtn{flex:1;padding:7px;border-radius:7px;border:none;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s}
 #playBtn{background:linear-gradient(135deg,#006622,#00cc44);color:#fff}
 #playBtn:hover{background:linear-gradient(135deg,#007a28,#00ff55)}
-#stopBtn{background:#1a0a00;border:1px solid #553300;color:#ff6600;cursor:pointer;padding:7px;border-radius:7px;font-size:11px;font-weight:700;transition:all .2s}
-#stopBtn:hover{background:#2a1500;color:#ff9900}
+#stopBtn{background:#1a0a00;border:1px solid #553300;color:#ff6600;cursor:pointer;padding:7px;border-radius:7px;font-size:11px;font-weight:700;flex:1;transition:all .2s}
 #resetBtn{width:100%;padding:6px;border-radius:7px;border:1px solid #1a2a3a;background:#0a1520;color:#5a8aaa;cursor:pointer;font-size:11px;margin-bottom:4px;transition:all .2s}
 #resetBtn:hover{color:#90c0e0;border-color:#2a4a6a}
 #clearBtn{width:100%;padding:6px;border-radius:7px;border:1px solid #3a1a00;background:#1a0a00;color:#cc6600;cursor:pointer;font-size:11px;transition:all .2s}
 #clearBtn:hover{background:#2a1500;color:#ff9900}
-#addCustomBtn{width:100%;margin-top:7px;padding:6px;border-radius:20px;border:1px dashed #1a4a6a;background:transparent;color:#3a8ab8;cursor:pointer;font-size:11px;transition:all .2s}
-#addCustomBtn:hover{background:#00a8ff14;color:#00a8ff;border-color:#00a8ff}
 
-.hint{font-size:9px;color:#2a4a5a;line-height:1.6}
+.hint{font-size:9px;color:#2a4a5a;line-height:1.7}
 .hint strong{color:#3a6a8a}
 
+/* ── CANVAS ── */
 #canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#0a1a2a,#030810);position:relative;overflow:hidden;min-width:0}
 #rinkCanvas{display:block;cursor:crosshair}
-#tipbar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,10,20,.85);border:1px solid #0d3050;color:#4a8ab0;padding:5px 16px;border-radius:20px;font-size:11px;pointer-events:none;white-space:nowrap}
+#tipbar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,10,20,.88);border:1px solid #0d3050;color:#4a8ab0;padding:5px 16px;border-radius:20px;font-size:11px;pointer-events:none;white-space:nowrap;max-width:90%}
 #selInfo{position:absolute;top:10px;right:10px;background:rgba(0,168,255,.12);border:1px solid #00a8ff55;border-radius:8px;padding:6px 12px;font-size:11px;color:#00d4ff;display:none}
 
-/* Modal */
+/* ── MODAL ── */
 #modal{display:none;position:fixed;inset:0;background:rgba(0,5,15,.8);z-index:200;align-items:center;justify-content:center}
 #modal.open{display:flex}
 #mbox{background:#071422;border:1px solid #00a8ff;border-radius:14px;padding:22px;width:290px}
@@ -78,27 +86,16 @@ input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
 <body>
 
 <div id="header">
-  <div id="logo-wrap">
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="44" height="44">
-      <rect width="100" height="100" rx="20" fill="#080e18"/>
-      <rect width="100" height="100" rx="20" fill="url(#lg1)" opacity=".3"/>
-      <defs>
-        <radialGradient id="lg1" cx="50%" cy="40%" r="60%">
-          <stop offset="0%" stop-color="#00a8ff" stop-opacity=".5"/>
-          <stop offset="100%" stop-color="#000" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-      <!-- Blue swoosh -->
-      <path d="M10,70 Q30,30 92,52" stroke="#00a8ff" stroke-width="5" fill="none" stroke-linecap="round" opacity=".9"/>
-      <!-- Orange swoosh -->
-      <path d="M30,18 Q60,5 88,30" stroke="#ff9900" stroke-width="4.5" fill="none" stroke-linecap="round" opacity=".95"/>
-      <!-- T letter white -->
-      <rect x="26" y="24" width="48" height="9" rx="4" fill="white"/>
-      <rect x="43" y="24" width="14" height="44" rx="4" fill="white"/>
-      <!-- HQ orange -->
-      <text x="55" y="84" font-size="13" font-weight="900" fill="#ff9900" font-family="Arial,sans-serif">HQ</text>
-    </svg>
-  </div>
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="44" height="44" style="flex-shrink:0">
+    <rect width="100" height="100" rx="20" fill="#080e18"/>
+    <defs><radialGradient id="lg1" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#00a8ff" stop-opacity=".5"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
+    <rect width="100" height="100" rx="20" fill="url(#lg1)" opacity=".3"/>
+    <path d="M10,70 Q30,30 92,52" stroke="#00a8ff" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <path d="M30,18 Q60,5 88,30" stroke="#ff9900" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+    <rect x="26" y="24" width="48" height="9" rx="4" fill="white"/>
+    <rect x="43" y="24" width="14" height="44" rx="4" fill="white"/>
+    <text x="55" y="84" font-size="13" font-weight="900" fill="#ff9900" font-family="Arial,sans-serif">HQ</text>
+  </svg>
   <div>
     <div id="title">HOCKEY DRILL ANIMATOR</div>
     <div class="subtitle">THQ Sports</div>
@@ -115,8 +112,8 @@ input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
   <div id="sidebar">
 
     <div>
-      <div class="sec">Players</div>
-      <div class="positions-grid" id="posGrid"></div>
+      <div class="sec">Players <span id="playerCount" style="color:#4a7a9a;font-weight:400;text-transform:none;letter-spacing:0">(0 on ice)</span></div>
+      <div id="posGrid"></div>
       <button id="addCustomBtn" onclick="openModal()">+ Custom Position</button>
     </div>
 
@@ -128,7 +125,7 @@ input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
           Select &amp; Move
         </button>
         <button class="move-btn" data-m="skate" onclick="setMode('skate')">
-          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="7" x2="29" y2="7" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round"/><path d="M25,3 L31,7 L25,11" stroke="#00ff88" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="7" x2="28" y2="7" stroke="#00ff88" stroke-width="2.5" stroke-linecap="round"/><path d="M25,3 L31,7 L25,11" stroke="#00ff88" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Skate
         </button>
         <button class="move-btn" data-m="skatePuck" onclick="setMode('skatePuck')">
@@ -136,11 +133,11 @@ input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
           Skate w/ Puck
         </button>
         <button class="move-btn" data-m="pass" onclick="setMode('pass')">
-          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="7" x2="27" y2="7" stroke="#00a8ff" stroke-width="2" stroke-dasharray="4,3" stroke-linecap="round"/><path d="M24,3 L31,7 L24,11" stroke="#00a8ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="7" x2="26" y2="7" stroke="#00a8ff" stroke-width="2" stroke-dasharray="4,3" stroke-linecap="round"/><path d="M24,3 L31,7 L24,11" stroke="#00a8ff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Pass
         </button>
         <button class="move-btn" data-m="shot" onclick="setMode('shot')">
-          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="5" x2="28" y2="5" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="9" x2="28" y2="9" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><path d="M25,2 L32,7 L25,12" stroke="#ff4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="5" x2="27" y2="5" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="9" x2="27" y2="9" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><path d="M25,2 L32,7 L25,12" stroke="#ff4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Shot
         </button>
         <button class="move-btn" data-m="del" onclick="setMode('del')">
@@ -152,7 +149,7 @@ input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
 
     <div class="speed-sec">
       <div class="sec">Animation Speed</div>
-      <div class="speed-row"><span>Slow</span><span id="speedLbl">1.0x</span><span>Fast</span></div>
+      <div class="speed-row"><span>Slow</span><span id="speedLbl">1x</span><span>Fast</span></div>
       <input type="range" id="speedSlider" min="0.25" max="4" step="0.25" value="1" oninput="setSpeed(this.value)">
     </div>
 
@@ -167,11 +164,13 @@ input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
     </div>
 
     <div class="hint">
-      <strong>Quick Start:</strong><br>
-      1. Drag players onto ice<br>
-      2. Pick a move type<br>
-      3. Click player → click destination<br>
-      4. Chain moves, then ▶ Play
+      <strong>How to use:</strong><br>
+      • Click <b>+</b> or drag token to ice<br>
+      • Pick a move type<br>
+      • Click &amp; drag a player<br>
+      • Release to finish path<br>
+      • Click player again to chain<br>
+      • ▶ Play to animate all
     </div>
 
   </div>
@@ -179,7 +178,7 @@ input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
   <div id="canvas-wrap">
     <canvas id="rinkCanvas"></canvas>
     <div id="selInfo"></div>
-    <div id="tipbar">Drag player tokens onto the ice to get started</div>
+    <div id="tipbar">Click + or drag a player token onto the ice to begin</div>
   </div>
 </div>
 
@@ -197,62 +196,63 @@ input[type=range]{width:100%;accent-color:#00a8ff;height:4px}
 </div>
 
 <script>
-// ── CONSTANTS ───────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
 const BASE_POSITIONS = [
-  {label:'C',  color:'#FF6B35', name:'Center'},
-  {label:'LW', color:'#4ECDC4', name:'Left Wing'},
-  {label:'RW', color:'#45B7D1', name:'Right Wing'},
-  {label:'LD', color:'#96CEB4', name:'Left Defense'},
-  {label:'RD', color:'#FFEAA7', name:'Right Defense'},
-  {label:'G',  color:'#DA8BFF', name:'Goalie'},
+  {base:'C',  color:'#FF6B35', name:'Center'},
+  {base:'LW', color:'#4ECDC4', name:'Left Wing'},
+  {base:'RW', color:'#45B7D1', name:'Right Wing'},
+  {base:'LD', color:'#96CEB4', name:'Left Defense'},
+  {base:'RD', color:'#FFEAA7', name:'Right Defense'},
+  {base:'G',  color:'#DA8BFF', name:'Goalie'},
 ];
 const PALETTE = ['#FF6B35','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DA8BFF',
-                 '#FF8888','#88FF88','#FFD700','#FF88FF','#ffffff','#aaaaaa'];
+                 '#FF4444','#44FF88','#FFD700','#FF88FF','#ffffff','#aaaaaa'];
 
 // NHL rink in feet
 const R = {
   W:200, H:85,
   cornerR:28,
-  goalLineX:11,       // from each end
-  blueLineX:75,       // from each end board
-  ezFOy:[21.5,63.5],  // end-zone faceoff circle centres (from left board)
-  ezFOxOff:20,        // from goal line (toward centre)
-  nzFOy:[21.5,63.5],  // neutral-zone faceoff dot y
-  nzFOxOff:5,         // from blue line (outside, toward end)
+  goalLineX:11,
+  blueLineX:75,
+  ezFOy:[21.5,63.5],
+  ezFOxOff:20,
+  nzFOy:[21.5,63.5],
+  nzFOxOff:5,
   circleR:15,
   creaseR:6,
   netW:6, netD:4,
 };
 
-// ── STATE ───────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
 let iceType = 'full';
 let mode = 'select';
 let players = [];
 let moves = [];
 let customPositions = [];
 let selectedId = null;
-let drawingMove = null; // {playerId, type}
 let animPlaying = false;
 let animTime = 0;
 let animSpeed = 1;
 let animRaf = null;
 let animLastTs = null;
 
-// Drag token from sidebar
-let dragToken = null;   // {label,color}
-let mousePos = {x:0, y:0}; // global mouse
-
-// Drag player on canvas
+let dragToken = null;
+let mousePos = {x:0,y:0};
 let dragPlayer = null;
 let dragOff = {x:0,y:0};
-
-// Free-draw path
 let isDrawing = false;
-let currentWaypoints = []; // rink coords during drag
+let currentWaypoints = [];
+let drawingMove = null;
 
 let canvas, ctx, CW, CH;
 
-// ── INIT ────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
 function init(){
   canvas = document.getElementById('rinkCanvas');
   ctx = canvas.getContext('2d');
@@ -264,25 +264,79 @@ function init(){
   canvas.addEventListener('mousemove', onCMove);
   canvas.addEventListener('mouseup', onCUp);
   canvas.addEventListener('mouseleave', onCLeave);
-  canvas.addEventListener('contextmenu', e=>{e.preventDefault(); cancelDraw();});
+  canvas.addEventListener('contextmenu', e=>{e.preventDefault();cancelDraw();});
   document.addEventListener('mousemove', onGMove);
   document.addEventListener('mouseup', onGUp);
   document.addEventListener('keydown', e=>{ if(e.key==='Escape') cancelDraw(); });
   render();
 }
 
+// ─────────────────────────────────────────────
+// PLAYER GRID
+// ─────────────────────────────────────────────
+function allPositions(){ return [...BASE_POSITIONS,...customPositions]; }
+
+function countOnIce(base){ return players.filter(p=>p.base===base).length; }
+
+function getLabel(base){
+  const n = countOnIce(base);
+  return n === 0 ? base : base + (n+1);
+}
+
 function buildGrid(){
   const g = document.getElementById('posGrid');
   g.innerHTML = '';
-  [...BASE_POSITIONS,...customPositions].forEach(p=>{
-    const el = document.createElement('div');
-    el.className = 'pos-token';
-    el.textContent = p.label;
-    el.title = p.name||p.label;
-    el.style.cssText = `background:${p.color}28;color:${p.color};border-color:${p.color}70`;
-    el.addEventListener('mousedown', e=>startTokenDrag(e,p));
-    g.appendChild(el);
+  allPositions().forEach(pos=>{
+    const n = countOnIce(pos.base);
+    const row = document.createElement('div');
+    row.className = 'pos-row';
+
+    // Draggable token
+    const tok = document.createElement('div');
+    tok.className = 'pos-token';
+    tok.textContent = pos.base;
+    tok.title = `Drag ${pos.name||pos.base} onto ice`;
+    tok.style.cssText = `background:${pos.color}28;color:${pos.color};border-color:${pos.color}70`;
+    tok.addEventListener('mousedown', e=>startTokenDrag(e, pos));
+
+    // Info
+    const info = document.createElement('div');
+    info.className = 'pos-info';
+    info.innerHTML = `<div class="pos-name">${pos.name||pos.base}</div><div class="pos-count">${n > 0 ? n+' on ice' : 'drag or +'}</div>`;
+
+    // + button
+    const btn = document.createElement('button');
+    btn.className = 'pos-add';
+    btn.textContent = '+';
+    btn.title = `Add ${pos.name||pos.base} to center ice`;
+    btn.onclick = ()=> addPlayerCenter(pos);
+
+    row.appendChild(tok); row.appendChild(info); row.appendChild(btn);
+    g.appendChild(row);
   });
+
+  // Player count header
+  document.getElementById('playerCount').textContent = `(${players.length} on ice)`;
+}
+
+function addPlayerCenter(pos){
+  const label = getLabel(pos.base);
+  const id = 'p'+Date.now()+Math.random();
+  const rW = iceType==='full'?R.W:R.W/2;
+  // Random scatter around center so they don't all stack
+  const n = countOnIce(pos.base);
+  const angle = (n * 2.39996) * Math.PI; // golden angle spread
+  const dist = 8 + n * 4;
+  players.push({
+    id, base:pos.base, label, color:pos.color,
+    x: clampX(rW/2 + Math.cos(angle)*dist),
+    y: clamp(R.H/2 + Math.sin(angle)*dist, 3, R.H-3)
+  });
+  selectedId = id;
+  selInfo(players[players.length-1]);
+  buildGrid();
+  tip(`${label} added — select a move type then drag to draw paths`);
+  render();
 }
 
 function buildPalette(){
@@ -290,123 +344,116 @@ function buildPalette(){
   r.innerHTML = '';
   PALETTE.forEach((c,i)=>{
     const el = document.createElement('div');
-    el.className = 'cswatch'+(i===0?' sel':'');
-    el.style.background = c;
-    el.onclick = ()=>{ r.querySelectorAll('.cswatch').forEach(s=>s.classList.remove('sel')); el.classList.add('sel'); };
+    el.className='cswatch'+(i===0?' sel':'');
+    el.style.background=c;
+    el.onclick=()=>{ r.querySelectorAll('.cswatch').forEach(s=>s.classList.remove('sel')); el.classList.add('sel'); };
     r.appendChild(el);
   });
 }
 
-// ── RESIZE & COORDS ─────────────────────────────────────────
+// ─────────────────────────────────────────────
+// RESIZE & COORDS
+// ─────────────────────────────────────────────
 function resize(){
   const wrap = document.getElementById('canvas-wrap');
-  const aw = wrap.clientWidth - 24;
-  const ah = wrap.clientHeight - 24;
-  const rW = iceType==='full' ? R.W : R.W/2;
+  const aw = wrap.clientWidth-24, ah = wrap.clientHeight-24;
+  const rW = iceType==='full'?R.W:R.W/2;
   const scale = Math.min(aw/rW, ah/R.H);
-  CW = Math.round(rW * scale);
-  CH = Math.round(R.H * scale);
-  canvas.width = CW;
-  canvas.height = CH;
+  CW = Math.round(rW*scale); CH = Math.round(R.H*scale);
+  canvas.width=CW; canvas.height=CH;
   render();
 }
 
-function r2c(rx, ry){ // rink coords → canvas pixels
-  const rW = iceType==='full' ? R.W : R.W/2;
-  return { x: rx/rW*CW, y: ry/R.H*CH };
-}
-function c2r(cx, cy){ // canvas pixels → rink coords
-  const rW = iceType==='full' ? R.W : R.W/2;
-  return { x: cx/CW*rW, y: cy/CH*R.H };
-}
-function sx(d){ const rW=iceType==='full'?R.W:R.W/2; return d/rW*CW; } // scale x distance
-function sy(d){ return d/R.H*CH; }                                       // scale y distance
+function r2c(rx,ry){ const rW=iceType==='full'?R.W:R.W/2; return{x:rx/rW*CW,y:ry/R.H*CH}; }
+function c2r(cx,cy){ const rW=iceType==='full'?R.W:R.W/2; return{x:cx/CW*rW,y:cy/CH*R.H}; }
+function sx(d){ const rW=iceType==='full'?R.W:R.W/2; return d/rW*CW; }
+function sy(d){ return d/R.H*CH; }
+function clampX(x){ return Math.max(0,Math.min(iceType==='full'?R.W:R.W/2,x)); }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
 
-// ── DRAW RINK ───────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// DRAW RINK
+// ─────────────────────────────────────────────
+const BOARD = 8; // board thickness in canvas px
+
 function drawRink(){
   ctx.clearRect(0,0,CW,CH);
-  const BOARD = 5; // board thickness px
 
   if(iceType==='full'){
     const cr = sx(R.cornerR);
-    // White ice fill
+    // Fill entire area with board colour
+    ctx.fillStyle='#0a0a0a';
+    rrect(0,0,CW,CH,cr+BOARD); ctx.fill();
+    // White ice inside boards
     rrect(BOARD,BOARD,CW-BOARD*2,CH-BOARD*2,cr);
     ctx.fillStyle='#ffffff'; ctx.fill();
-    // Clip and draw lines inside boards
+    // Clip to ice & draw lines
     ctx.save(); rrect(BOARD,BOARD,CW-BOARD*2,CH-BOARD*2,cr); ctx.clip();
     drawLines('full'); ctx.restore();
-    // Thick black boards
-    rrect(0,0,CW,CH,cr+BOARD);
-    ctx.strokeStyle='#111'; ctx.lineWidth=BOARD*2; ctx.stroke();
+    // Board inner edge
+    rrect(BOARD,BOARD,CW-BOARD*2,CH-BOARD*2,cr);
+    ctx.strokeStyle='#000'; ctx.lineWidth=1.5; ctx.stroke();
+
   } else {
     const cr = sx(R.cornerR);
-    // Half ice: rounded left end, flat right (center line)
-    halfRectPath(cr,BOARD);
+    // Board fill (left end only)
+    ctx.fillStyle='#0a0a0a';
+    halfBoardPath(cr); ctx.fill();
+    // White ice
+    rrect(BOARD,BOARD,CW-BOARD,CH-BOARD*2,cr);
     ctx.fillStyle='#ffffff'; ctx.fill();
-    ctx.save(); halfRectPath(cr,BOARD); ctx.clip();
+    // Clip & lines
+    ctx.save(); rrect(BOARD,BOARD,CW-BOARD,CH-BOARD*2,cr); ctx.clip();
     drawLines('half'); ctx.restore();
-    // Boards: left rounded end + top/bottom boards only
-    ctx.strokeStyle='#111'; ctx.lineWidth=BOARD*2;
-    ctx.beginPath();
-    ctx.moveTo(BOARD,cr); ctx.arcTo(BOARD,BOARD,cr,BOARD,cr);
-    ctx.lineTo(CW-BOARD,BOARD); // top board
-    ctx.moveTo(BOARD,CH-cr); ctx.arcTo(BOARD,CH-BOARD,cr,CH-BOARD,cr);
-    ctx.lineTo(CW-BOARD,CH-BOARD); // bottom board
-    ctx.stroke();
-    // Left curved end board
-    ctx.beginPath(); ctx.arc(cr+BOARD,CH/2, CH/2-BOARD, -Math.PI/2, Math.PI/2); ctx.stroke();
-    // Dashed red centre line at right edge
-    ctx.strokeStyle='#cc0000'; ctx.lineWidth=sx(1.5);
-    ctx.setLineDash([sy(2),sy(2)]);
+    // Board edges
+    ctx.strokeStyle='#000'; ctx.lineWidth=1.5;
+    rrect(BOARD,BOARD,CW-BOARD,CH-BOARD*2,cr); ctx.stroke();
+    // Dashed red centre line on right
+    ctx.strokeStyle='#cc0000'; ctx.lineWidth=sx(2);
+    ctx.setLineDash([sy(2.5),sy(2.5)]);
     ctx.beginPath(); ctx.moveTo(CW-BOARD,BOARD); ctx.lineTo(CW-BOARD,CH-BOARD); ctx.stroke();
     ctx.setLineDash([]);
   }
 }
 
 function rrect(x,y,w,h,r){
+  if(r<0) r=0;
   ctx.beginPath();
   ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
   ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
   ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
   ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
 }
-function halfRectPath(cr,b){
+function halfBoardPath(cr){
+  // Left-end board shape for half ice
   ctx.beginPath();
-  ctx.moveTo(b+cr,b); ctx.lineTo(CW-b,b);
-  ctx.lineTo(CW-b,CH-b); ctx.lineTo(b+cr,CH-b);
-  ctx.arcTo(b,CH-b,b,CH-b-cr,cr); ctx.lineTo(b,b+cr);
-  ctx.arcTo(b,b,b+cr,b,cr); ctx.closePath();
+  ctx.moveTo(cr,0); ctx.lineTo(CW,0); ctx.lineTo(CW,CH); ctx.lineTo(cr,CH);
+  ctx.arcTo(0,CH,0,CH-cr,cr); ctx.lineTo(0,cr); ctx.arcTo(0,0,cr,0,cr);
+  ctx.closePath();
 }
 
 function drawLines(half){
   ctx.setLineDash([]);
-  const B = 5;
+  const B=BOARD;
   const glL=sx(R.goalLineX), glR=sx(R.W-R.goalLineX);
   const blL=sx(R.blueLineX), blR=sx(R.W-R.blueLineX);
   const cx2=CW/2, cy=CH/2;
-  const LW = sx(1.2);  // line width for thin lines
+  const LW=Math.max(1, sx(1.1));
 
   if(half==='full'){
-    // ── Trapezoid behind each goal ──
-    drawTrap(glL,1); drawTrap(glR,-1);
-
-    // ── Goal lines ──
+    // Goal lines
     vline(glL,'#cc0000',LW); vline(glR,'#cc0000',LW);
-
-    // ── Blue lines ──
-    vline(blL,'#1155cc',sx(2.5)); vline(blR,'#1155cc',sx(2.5));
-
-    // ── Centre red line (dashed) ──
-    ctx.strokeStyle='#cc0000'; ctx.lineWidth=sx(2);
+    // Blue lines
+    vline(blL,'#1155cc',Math.max(2,sx(2.5))); vline(blR,'#1155cc',Math.max(2,sx(2.5)));
+    // Centre red dashed line
+    ctx.strokeStyle='#cc0000'; ctx.lineWidth=Math.max(1.5,sx(2));
     ctx.setLineDash([sy(2.5),sy(2.5)]);
     ctx.beginPath(); ctx.moveTo(cx2,B); ctx.lineTo(cx2,CH-B); ctx.stroke();
     ctx.setLineDash([]);
-
-    // ── Centre circle (BLUE) ──
+    // Centre circle (blue)
     circle(cx2,cy,sx(R.circleR),'#1155cc',LW);
     dot(cx2,cy,sx(1.5),'#cc0000');
-
-    // ── End-zone faceoff circles ──
+    // End-zone faceoff circles
     const eys=R.ezFOy.map(y=>sy(y));
     [[glL+sx(R.ezFOxOff),eys[0]],[glL+sx(R.ezFOxOff),eys[1]],
      [glR-sx(R.ezFOxOff),eys[0]],[glR-sx(R.ezFOxOff),eys[1]]].forEach(([fx,fy])=>{
@@ -414,24 +461,17 @@ function drawLines(half){
       dot(fx,fy,sx(1.5),'#cc0000');
       hashMarks(fx,fy);
     });
-
-    // ── Neutral-zone faceoff dots (5ft INSIDE blue lines, toward centre) ──
+    // Neutral-zone dots (5ft inside blue lines toward centre)
     const nys=R.nzFOy.map(y=>sy(y));
     [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]],
-     [blR-sx(R.nzFOxOff),nys[0]],[blR-sx(R.nzFOxOff),nys[1]]].forEach(([fx,fy])=>{
-      dot(fx,fy,sx(1.5),'#cc0000');
-    });
-
-    // ── Creases & nets ──
+     [blR-sx(R.nzFOxOff),nys[0]],[blR-sx(R.nzFOxOff),nys[1]]].forEach(([fx,fy])=>dot(fx,fy,sx(1.5),'#cc0000'));
+    // Creases & nets
     drawCrease(glL,cy,1); drawNet(glL,cy,1);
     drawCrease(glR,cy,-1); drawNet(glR,cy,-1);
 
   } else { // half ice
-    const B=5;
-    drawTrap(glL,1);
     vline(glL,'#cc0000',LW);
-    vline(blL,'#1155cc',sx(2.5));
-
+    vline(blL,'#1155cc',Math.max(2,sx(2.5)));
     const eys=R.ezFOy.map(y=>sy(y));
     const fx=glL+sx(R.ezFOxOff);
     [[fx,eys[0]],[fx,eys[1]]].forEach(([x,y])=>{
@@ -439,137 +479,95 @@ function drawLines(half){
       dot(x,y,sx(1.5),'#cc0000');
       hashMarks(x,y);
     });
-
-    // Neutral-zone dot (inside blue line toward centre)
+    // Neutral-zone dots
     const nys=R.nzFOy.map(y=>sy(y));
-    [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]]].forEach(([x,y])=>{
-      dot(x,y,sx(1.5),'#cc0000');
-    });
-
-    // Partial centre circle peeking in at right edge
-    ctx.strokeStyle='#1155cc'; ctx.lineWidth=LW; ctx.setLineDash([]);
-    ctx.save(); ctx.beginPath(); ctx.rect(0,0,CW,CH); ctx.clip();
-    ctx.beginPath(); ctx.arc(CW-B, cy, sx(R.circleR),0,Math.PI*2); ctx.stroke();
-    dot(CW-B,cy,sx(1.5),'#cc0000');
+    [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]]].forEach(([x,y])=>dot(x,y,sx(1.5),'#cc0000'));
+    // Partial centre circle at right edge
+    ctx.save();
+    rrect(BOARD,BOARD,CW-BOARD,CH-BOARD*2,sx(R.cornerR)); ctx.clip();
+    circle(CW-BOARD,cy,sx(R.circleR),'#1155cc',LW);
+    dot(CW-BOARD,cy,sx(1.5),'#cc0000');
     ctx.restore();
-
     drawCrease(glL,cy,1); drawNet(glL,cy,1);
   }
 }
 
-function vline(x,color,lw){
-  const B=5;
-  ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.setLineDash([]);
-  ctx.beginPath(); ctx.moveTo(x,B); ctx.lineTo(x,CH-B); ctx.stroke();
+function vline(x,c,lw){
+  ctx.strokeStyle=c; ctx.lineWidth=lw; ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(x,BOARD); ctx.lineTo(x,CH-BOARD); ctx.stroke();
 }
-function circle(x,y,r,color,lw){
-  ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.setLineDash([]);
+function circle(x,y,r,c,lw){
+  ctx.strokeStyle=c; ctx.lineWidth=lw; ctx.setLineDash([]);
   ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
 }
-function dot(x,y,r,color){
-  ctx.fillStyle=color; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+function dot(x,y,r,c){
+  ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
 }
 function hashMarks(cx,cy){
-  // Standard NHL faceoff hash marks: L-shaped marks inside circle, lines on circle edge
   const cr=sx(R.circleR);
-  const armLen=sx(4), barLen=sx(2.5), armOff=sx(2.5);
-  ctx.strokeStyle='#cc0000'; ctx.lineWidth=sx(0.9); ctx.setLineDash([]);
+  const arm=sx(3.5), bar=sx(2.5), off=sx(2.5);
+  ctx.strokeStyle='#cc0000'; ctx.lineWidth=Math.max(0.8,sx(0.9)); ctx.setLineDash([]);
   ctx.beginPath();
-  // Top-left hash (inside circle, upper-left quadrant)
-  ctx.moveTo(cx-armOff, cy-cr+sy(3));
-  ctx.lineTo(cx-armOff, cy-cr+sy(3)+armLen);   // vertical arm
-  ctx.moveTo(cx-armOff, cy-cr+sy(3));
-  ctx.lineTo(cx-armOff-barLen, cy-cr+sy(3));    // horizontal bar
-  // Top-right hash
-  ctx.moveTo(cx+armOff, cy-cr+sy(3));
-  ctx.lineTo(cx+armOff, cy-cr+sy(3)+armLen);
-  ctx.moveTo(cx+armOff, cy-cr+sy(3));
-  ctx.lineTo(cx+armOff+barLen, cy-cr+sy(3));
-  // Bottom-left hash
-  ctx.moveTo(cx-armOff, cy+cr-sy(3));
-  ctx.lineTo(cx-armOff, cy+cr-sy(3)-armLen);
-  ctx.moveTo(cx-armOff, cy+cr-sy(3));
-  ctx.lineTo(cx-armOff-barLen, cy+cr-sy(3));
-  // Bottom-right hash
-  ctx.moveTo(cx+armOff, cy+cr-sy(3));
-  ctx.lineTo(cx+armOff, cy+cr-sy(3)-armLen);
-  ctx.moveTo(cx+armOff, cy+cr-sy(3));
-  ctx.lineTo(cx+armOff+barLen, cy+cr-sy(3));
-  ctx.stroke();
-  // Lines on circle at 9 and 3 o'clock (inside)
-  ctx.beginPath();
-  ctx.moveTo(cx-cr, cy-sy(3)); ctx.lineTo(cx-cr, cy+sy(3));
-  ctx.moveTo(cx+cr, cy-sy(3)); ctx.lineTo(cx+cr, cy+sy(3));
+  // Top-left L
+  ctx.moveTo(cx-off,cy-cr+sy(3)); ctx.lineTo(cx-off,cy-cr+sy(3)+arm);
+  ctx.moveTo(cx-off,cy-cr+sy(3)); ctx.lineTo(cx-off-bar,cy-cr+sy(3));
+  // Top-right L
+  ctx.moveTo(cx+off,cy-cr+sy(3)); ctx.lineTo(cx+off,cy-cr+sy(3)+arm);
+  ctx.moveTo(cx+off,cy-cr+sy(3)); ctx.lineTo(cx+off+bar,cy-cr+sy(3));
+  // Bottom-left L
+  ctx.moveTo(cx-off,cy+cr-sy(3)); ctx.lineTo(cx-off,cy+cr-sy(3)-arm);
+  ctx.moveTo(cx-off,cy+cr-sy(3)); ctx.lineTo(cx-off-bar,cy+cr-sy(3));
+  // Bottom-right L
+  ctx.moveTo(cx+off,cy+cr-sy(3)); ctx.lineTo(cx+off,cy+cr-sy(3)-arm);
+  ctx.moveTo(cx+off,cy+cr-sy(3)); ctx.lineTo(cx+off+bar,cy+cr-sy(3));
+  // Side ticks on circle rim
+  ctx.moveTo(cx-cr,cy-sy(2.5)); ctx.lineTo(cx-cr,cy+sy(2.5));
+  ctx.moveTo(cx+cr,cy-sy(2.5)); ctx.lineTo(cx+cr,cy+sy(2.5));
   ctx.stroke();
 }
-
-function drawTrap(glx, dir){
-  // Trapezoid not shown in template — intentionally blank
-}
-
-function drawCrease(gx, gy, dir){
-  // dir 1 = left goal, crease extends RIGHT (toward centre)
-  // dir -1 = right goal, crease extends LEFT
-  const cr = sx(R.creaseR);
-  ctx.fillStyle = 'rgba(173,216,255,0.55)';
-  ctx.strokeStyle = '#1155cc'; ctx.lineWidth = sx(0.9); ctx.setLineDash([]);
+function drawCrease(gx,gy,dir){
+  const cr=sx(R.creaseR);
+  ctx.fillStyle='rgba(173,216,255,0.55)';
+  ctx.strokeStyle='#1155cc'; ctx.lineWidth=Math.max(0.8,sx(0.9)); ctx.setLineDash([]);
   ctx.beginPath();
-  if(dir===1){
-    ctx.arc(gx,gy,cr,-Math.PI/2,Math.PI/2);
-  } else {
-    ctx.arc(gx,gy,cr,Math.PI/2,-Math.PI/2);
-  }
+  if(dir===1) ctx.arc(gx,gy,cr,-Math.PI/2,Math.PI/2);
+  else ctx.arc(gx,gy,cr,Math.PI/2,-Math.PI/2);
   ctx.closePath(); ctx.fill(); ctx.stroke();
 }
-
-function drawNet(gx, gy, dir){
-  // Net extends AWAY from centre (toward end board)
-  const hw = sy(R.netW/2);
-  const depth = sx(R.netD) * (-dir);
-
+function drawNet(gx,gy,dir){
+  const hw=sy(R.netW/2), depth=sx(R.netD)*(-dir);
   ctx.setLineDash([]);
-  // Posts (small red dots on goal line)
-  ctx.fillStyle = '#cc2200';
+  // Goal posts (red dots)
+  ctx.fillStyle='#cc2200';
   ctx.beginPath(); ctx.arc(gx,gy-hw,sx(0.7),0,Math.PI*2); ctx.fill();
   ctx.beginPath(); ctx.arc(gx,gy+hw,sx(0.7),0,Math.PI*2); ctx.fill();
-
   // Net frame (black)
-  ctx.strokeStyle = '#222'; ctx.lineWidth = sx(1.0);
+  ctx.strokeStyle='#111'; ctx.lineWidth=Math.max(1,sx(1));
+  ctx.strokeRect? null : null;
   ctx.beginPath();
-  ctx.moveTo(gx,gy-hw);
-  ctx.lineTo(gx+depth,gy-hw);
-  ctx.lineTo(gx+depth,gy+hw);
-  ctx.lineTo(gx,gy+hw);
+  ctx.moveTo(gx,gy-hw); ctx.lineTo(gx+depth,gy-hw);
+  ctx.lineTo(gx+depth,gy+hw); ctx.lineTo(gx,gy+hw);
   ctx.stroke();
-
-  // Crossbar on goal line
   ctx.beginPath(); ctx.moveTo(gx,gy-hw); ctx.lineTo(gx,gy+hw); ctx.stroke();
-
-  // Net mesh (subtle)
-  ctx.strokeStyle = '#44444455'; ctx.lineWidth = sx(0.3);
-  for(let i=1;i<4;i++){
-    const x=gx+depth*i/4;
-    ctx.beginPath(); ctx.moveTo(x,gy-hw); ctx.lineTo(x,gy+hw); ctx.stroke();
-  }
-  for(let i=1;i<3;i++){
-    const y=gy-hw+(2*hw)*i/3;
-    ctx.beginPath(); ctx.moveTo(gx,y); ctx.lineTo(gx+depth,y); ctx.stroke();
-  }
+  // Mesh
+  ctx.strokeStyle='#33333355'; ctx.lineWidth=sx(0.3);
+  for(let i=1;i<4;i++){ const x=gx+depth*i/4; ctx.beginPath(); ctx.moveTo(x,gy-hw); ctx.lineTo(x,gy+hw); ctx.stroke(); }
+  for(let i=1;i<3;i++){ const y=gy-hw+(hw*2)*i/3; ctx.beginPath(); ctx.moveTo(gx,y); ctx.lineTo(gx+depth,y); ctx.stroke(); }
 }
 
-// ── PATH HELPERS ─────────────────────────────────────────────
-function pathTotalLen(waypoints){
+// ─────────────────────────────────────────────
+// PATH HELPERS
+// ─────────────────────────────────────────────
+function pathTotalLen(wps){
   let d=0;
-  for(let i=1;i<waypoints.length;i++){
-    const dx=waypoints[i].x-waypoints[i-1].x, dy=waypoints[i].y-waypoints[i-1].y;
+  for(let i=1;i<wps.length;i++){
+    const dx=wps[i].x-wps[i-1].x, dy=wps[i].y-wps[i-1].y;
     d+=Math.sqrt(dx*dx+dy*dy);
   }
   return d;
 }
-
-// Returns canvas-coord points for the first `prog` (0-1) fraction of a rink-coord waypoint path
-function partialPath(waypoints, prog){
-  const rpts = waypoints.map(p=>r2c(p.x,p.y));
+function partialPath(wps, prog){
+  const rpts=wps.map(p=>r2c(p.x,p.y));
   if(prog>=1) return rpts;
   const lens=[0];
   for(let i=1;i<rpts.length;i++){
@@ -588,146 +586,152 @@ function partialPath(waypoints, prog){
   }
   return out;
 }
-
-// Simplify path using distance threshold (rink units)
 function simplifyPath(pts, tol){
   if(pts.length<=2) return pts;
   const out=[pts[0]];
   for(let i=1;i<pts.length-1;i++){
-    const last=out[out.length-1];
-    const dx=pts[i].x-last.x, dy=pts[i].y-last.y;
+    const l=out[out.length-1];
+    const dx=pts[i].x-l.x, dy=pts[i].y-l.y;
     if(dx*dx+dy*dy>=tol*tol) out.push(pts[i]);
   }
   out.push(pts[pts.length-1]);
   return out;
 }
-
-// ── DRAW MOVES ───────────────────────────────────────────────
-function drawAllMoves(){
-  moves.forEach(mv=>{
-    const prog = animPlaying ? getMoveProgress(mv) : 1;
-    if(prog<=0) return;
-    drawMoveLine(mv, prog);
-  });
+function pointOnPath(wps, t){
+  if(t<=0) return wps[0];
+  if(t>=1) return wps[wps.length-1];
+  const lens=[0];
+  for(let i=1;i<wps.length;i++){
+    const dx=wps[i].x-wps[i-1].x, dy=wps[i].y-wps[i-1].y;
+    lens.push(lens[i-1]+Math.sqrt(dx*dx+dy*dy));
+  }
+  const total=lens[lens.length-1];
+  if(!total) return wps[0];
+  const target=t*total;
+  for(let i=1;i<wps.length;i++){
+    if(lens[i]>=target){
+      const st=(target-lens[i-1])/(lens[i]-lens[i-1]);
+      return{x:wps[i-1].x+(wps[i].x-wps[i-1].x)*st, y:wps[i-1].y+(wps[i].y-wps[i-1].y)*st};
+    }
+  }
+  return wps[wps.length-1];
 }
 
-function drawMoveLine(mv, prog){
-  const pts = partialPath(mv.waypoints, prog);
-  if(pts.length<2) return;
-  ctx.save();
-  switch(mv.type){
-    case 'skate':     drawSkateMulti(pts, mv.color); break;
-    case 'skatePuck': drawSkatePuckMulti(pts, mv.color); break;
-    case 'pass':      drawPassMulti(pts); break;
-    case 'shot':      drawShotMulti(pts); break;
-  }
-  ctx.restore();
+// ─────────────────────────────────────────────
+// DRAW MOVES
+// ─────────────────────────────────────────────
+function drawAllMoves(){
+  moves.forEach(mv=>{
+    const prog=animPlaying?getMoveProgress(mv):1;
+    if(prog<=0) return;
+    const pts=partialPath(mv.waypoints,prog);
+    if(pts.length<2) return;
+    ctx.save();
+    switch(mv.type){
+      case 'skate':     drawSkateMulti(pts,mv.color); break;
+      case 'skatePuck': drawSkatePuckMulti(pts,mv.color); break;
+      case 'pass':      drawPassMulti(pts); break;
+      case 'shot':      drawShotMulti(pts); break;
+    }
+    ctx.restore();
+  });
 }
 
 function arrow(x,y,ang,sz,color){
   ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
   ctx.fillStyle=color; ctx.beginPath();
-  ctx.moveTo(0,0); ctx.lineTo(-sz,-sz*0.45); ctx.lineTo(-sz,sz*0.45);
+  ctx.moveTo(0,0); ctx.lineTo(-sz,-sz*0.42); ctx.lineTo(-sz*0.6,0); ctx.lineTo(-sz,sz*0.42);
   ctx.closePath(); ctx.fill(); ctx.restore();
 }
-
 function endAngle(pts){
-  const last=pts[pts.length-1], prev=pts[pts.length-2];
-  return Math.atan2(last.y-prev.y, last.x-prev.x);
+  const l=pts[pts.length-1], p=pts[pts.length-2];
+  return Math.atan2(l.y-p.y,l.x-p.x);
 }
+const AS=()=>Math.max(8,Math.min(18,CW/26));
 
-function drawSkateMulti(pts, color){
-  const AS=Math.max(8,Math.min(18,CW/28));
+function drawSkateMulti(pts,color){
   ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  ctx.lineCap='round'; ctx.lineJoin='round';
   ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
   ctx.stroke();
-  const last=pts[pts.length-1];
-  arrow(last.x,last.y,endAngle(pts),AS,color);
+  const l=pts[pts.length-1]; arrow(l.x,l.y,endAngle(pts),AS(),color);
+  ctx.lineCap='butt'; ctx.lineJoin='miter';
 }
-
-function drawSkatePuckMulti(pts, color){
-  const AS=Math.max(8,Math.min(18,CW/28));
-  const amp=7, freq=0.09; // wave amplitude (px) and spatial frequency
+function drawSkatePuckMulti(pts,color){
+  const amp=7, freq=0.09;
   ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.setLineDash([]);
+  ctx.lineCap='round'; ctx.lineJoin='round';
   ctx.beginPath();
   let dist=0, first=true;
   for(let i=1;i<pts.length;i++){
     const dx=pts[i].x-pts[i-1].x, dy=pts[i].y-pts[i-1].y;
-    const segLen=Math.sqrt(dx*dx+dy*dy);
-    const ang=Math.atan2(dy,dx);
+    const segLen=Math.sqrt(dx*dx+dy*dy), ang=Math.atan2(dy,dx);
     const steps=Math.max(2,Math.floor(segLen));
     for(let j=0;j<=steps;j++){
       const t=j/steps;
       const px=pts[i-1].x+dx*t, py=pts[i-1].y+dy*t;
       const wave=Math.sin((dist+segLen*t)*freq*Math.PI*2)*amp;
-      const wx=-Math.sin(ang)*wave, wy=Math.cos(ang)*wave;
-      if(first){ctx.moveTo(px+wx,py+wy);first=false;}else ctx.lineTo(px+wx,py+wy);
+      if(first){ctx.moveTo(px-Math.sin(ang)*wave,py+Math.cos(ang)*wave);first=false;}
+      else ctx.lineTo(px-Math.sin(ang)*wave,py+Math.cos(ang)*wave);
     }
     dist+=segLen;
   }
   ctx.stroke();
-  const last=pts[pts.length-1];
-  arrow(last.x,last.y,endAngle(pts),AS,color);
+  const l=pts[pts.length-1]; arrow(l.x,l.y,endAngle(pts),AS(),color);
+  ctx.lineCap='butt'; ctx.lineJoin='miter';
 }
-
 function drawPassMulti(pts){
-  const AS=Math.max(8,Math.min(18,CW/28));
   ctx.strokeStyle='#00a8ff'; ctx.lineWidth=2.2;
+  ctx.lineCap='round'; ctx.lineJoin='round';
   ctx.setLineDash([sx(3),sx(2)]);
   ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
   for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
   ctx.stroke(); ctx.setLineDash([]);
-  const last=pts[pts.length-1];
-  arrow(last.x,last.y,endAngle(pts),AS,'#00a8ff');
-}
-
-function drawShotMulti(pts){
-  const AS=Math.max(8,Math.min(18,CW/28));
-  ctx.setLineDash([]);
-  // Thick red then thin white overlay = clean double-line look
-  ctx.strokeStyle='#ff4444'; ctx.lineWidth=6;
-  ctx.lineCap='round'; ctx.lineJoin='round';
-  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
-  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
-  ctx.stroke();
-  ctx.strokeStyle='rgba(255,255,255,0.85)'; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
-  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
-  ctx.stroke();
+  const l=pts[pts.length-1]; arrow(l.x,l.y,endAngle(pts),AS(),'#00a8ff');
   ctx.lineCap='butt'; ctx.lineJoin='miter';
-  const last=pts[pts.length-1];
-  arrow(last.x,last.y,endAngle(pts),AS,'#ff4444');
+}
+function drawShotMulti(pts){
+  ctx.setLineDash([]);
+  ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.strokeStyle='#ff3333'; ctx.lineWidth=6;
+  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,0.88)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+  ctx.stroke();
+  const l=pts[pts.length-1]; arrow(l.x,l.y,endAngle(pts),AS(),'#ff3333');
+  ctx.lineCap='butt'; ctx.lineJoin='miter';
 }
 
-// Preview the path being drawn live
 function drawPreviewMove(){
   if(!isDrawing||!drawingMove||currentWaypoints.length<2) return;
   const p=players.find(pl=>pl.id===drawingMove.playerId);
   if(!p) return;
   const pts=currentWaypoints.map(wp=>r2c(wp.x,wp.y));
-  ctx.globalAlpha=0.65;
+  ctx.globalAlpha=0.65; ctx.save();
   switch(drawingMove.type){
     case 'skate':     drawSkateMulti(pts,p.color); break;
     case 'skatePuck': drawSkatePuckMulti(pts,p.color); break;
     case 'pass':      drawPassMulti(pts); break;
     case 'shot':      drawShotMulti(pts); break;
   }
-  ctx.globalAlpha=1;
+  ctx.restore(); ctx.globalAlpha=1;
 }
 
-// ── DRAW PLAYERS ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// DRAW PLAYERS
+// ─────────────────────────────────────────────
 function drawPlayers(){
   players.forEach(p=>{
-    const pos = animPlaying ? getAnimPos(p) : {x:p.x,y:p.y};
-    const cp = r2c(pos.x,pos.y);
-    const r = Math.max(14, Math.min(22, CW/24));
-    const isSel = p.id===selectedId && !animPlaying;
+    const pos=animPlaying?getAnimPos(p):{x:p.x,y:p.y};
+    const cp=r2c(pos.x,pos.y);
+    const r=Math.max(14,Math.min(22,CW/22));
+    const isSel=p.id===selectedId&&!animPlaying;
 
-    // Glow for selected
-    if(isSel){
-      ctx.shadowColor=p.color; ctx.shadowBlur=16;
-    }
+    if(isSel){ ctx.shadowColor=p.color; ctx.shadowBlur=14; }
     ctx.fillStyle=p.color;
     ctx.beginPath(); ctx.arc(cp.x,cp.y,r,0,Math.PI*2); ctx.fill();
     ctx.shadowBlur=0;
@@ -735,126 +739,81 @@ function drawPlayers(){
     if(isSel){
       ctx.strokeStyle='#fff'; ctx.lineWidth=2.5;
       ctx.beginPath(); ctx.arc(cp.x,cp.y,r,0,Math.PI*2); ctx.stroke();
-      ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1.5;
+      ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(cp.x,cp.y,r+5,0,Math.PI*2); ctx.stroke();
     }
 
     // Label
-    ctx.fillStyle = luma(p.color) > 160 ? '#111' : '#fff';
-    ctx.font = `800 ${Math.round(r*0.75)}px 'Segoe UI',sans-serif`;
+    const luma=hexLuma(p.color);
+    ctx.fillStyle=luma>155?'#111':'#fff';
+    const fs=p.label.length>2?Math.round(r*0.55):Math.round(r*0.68);
+    ctx.font=`800 ${fs}px 'Segoe UI',sans-serif`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText(p.label, cp.x, cp.y);
+    ctx.fillText(p.label,cp.x,cp.y);
   });
 }
-
-function luma(hex){
+function hexLuma(hex){
   const c=hex.replace('#','');
-  const r=parseInt(c.slice(0,2),16),g=parseInt(c.slice(2,4),16),b=parseInt(c.slice(4,6),16);
-  return 0.299*r+0.587*g+0.114*b;
+  return 0.299*parseInt(c.slice(0,2),16)+0.587*parseInt(c.slice(2,4),16)+0.114*parseInt(c.slice(4,6),16);
 }
-
-// Draw dragging token
 function drawDragToken(){
   if(!dragToken) return;
-  const rect = canvas.getBoundingClientRect();
-  const cx = mousePos.x - rect.left;
-  const cy = mousePos.y - rect.top;
-  if(cx<-30||cy<-30||cx>CW+30||cy>CH+30) return;
-  const r = Math.max(14,Math.min(22,CW/24));
-  ctx.fillStyle=dragToken.color; ctx.globalAlpha=0.85;
+  const rect=canvas.getBoundingClientRect();
+  const cx=mousePos.x-rect.left, cy=mousePos.y-rect.top;
+  if(cx<-40||cy<-40||cx>CW+40||cy>CH+40) return;
+  const r=Math.max(14,Math.min(22,CW/22));
+  ctx.globalAlpha=0.8; ctx.fillStyle=dragToken.color;
   ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
   ctx.globalAlpha=1;
-  ctx.fillStyle=luma(dragToken.color)>160?'#111':'#fff';
-  ctx.font=`800 ${Math.round(r*0.75)}px 'Segoe UI',sans-serif`;
+  ctx.fillStyle=hexLuma(dragToken.color)>155?'#111':'#fff';
+  ctx.font=`800 ${Math.round(r*0.68)}px 'Segoe UI',sans-serif`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(dragToken.label,cx,cy);
+  ctx.fillText(dragToken.base,cx,cy);
 }
 
-// ── ANIMATION ────────────────────────────────────────────────
-function getMoveDuration(mv){
-  return (pathTotalLen(mv.waypoints)/28) / animSpeed;
-}
-
-function getPlayerTimeline(pid){
-  return moves.filter(m=>m.playerId===pid);
-}
-
+// ─────────────────────────────────────────────
+// ANIMATION
+// ─────────────────────────────────────────────
+function getMoveDuration(mv){ return (pathTotalLen(mv.waypoints)/28)/animSpeed; }
+function getPlayerTimeline(pid){ return moves.filter(m=>m.playerId===pid); }
 function getMoveStartTime(mv){
   let t=0;
-  for(const m of getPlayerTimeline(mv.playerId)){
-    if(m.id===mv.id) return t;
-    t+=getMoveDuration(m);
-  }
+  for(const m of getPlayerTimeline(mv.playerId)){ if(m.id===mv.id) return t; t+=getMoveDuration(m); }
   return t;
 }
-
 function getMoveProgress(mv){
-  const start=getMoveStartTime(mv), dur=getMoveDuration(mv);
+  const st=getMoveStartTime(mv), dur=getMoveDuration(mv);
   if(dur<=0) return 1;
-  if(animTime<start) return 0;
-  if(animTime>=start+dur) return 1;
-  return (animTime-start)/dur;
+  if(animTime<st) return 0;
+  if(animTime>=st+dur) return 1;
+  return (animTime-st)/dur;
 }
-
-// Interpolate position along a waypoint path at t=0..1
-function pointOnPath(waypoints, t){
-  if(t<=0) return waypoints[0];
-  if(t>=1) return waypoints[waypoints.length-1];
-  const lens=[0];
-  for(let i=1;i<waypoints.length;i++){
-    const dx=waypoints[i].x-waypoints[i-1].x, dy=waypoints[i].y-waypoints[i-1].y;
-    lens.push(lens[i-1]+Math.sqrt(dx*dx+dy*dy));
-  }
-  const total=lens[lens.length-1];
-  if(total===0) return waypoints[0];
-  const target=t*total;
-  for(let i=1;i<waypoints.length;i++){
-    if(lens[i]>=target){
-      const st=(target-lens[i-1])/(lens[i]-lens[i-1]);
-      return {x:waypoints[i-1].x+(waypoints[i].x-waypoints[i-1].x)*st,
-              y:waypoints[i-1].y+(waypoints[i].y-waypoints[i-1].y)*st};
-    }
-  }
-  return waypoints[waypoints.length-1];
-}
-
 function getAnimPos(p){
   const tl=getPlayerTimeline(p.id);
-  if(!tl.length) return {x:p.x,y:p.y};
+  if(!tl.length) return{x:p.x,y:p.y};
   let elapsed=0;
   for(const mv of tl){
     const dur=getMoveDuration(mv);
-    if(animTime<elapsed+dur){
-      const t=dur>0?(animTime-elapsed)/dur:1;
-      return pointOnPath(mv.waypoints,t);
-    }
+    if(animTime<elapsed+dur) return pointOnPath(mv.waypoints,dur>0?(animTime-elapsed)/dur:1);
     elapsed+=dur;
   }
   const last=tl[tl.length-1];
   return last.waypoints[last.waypoints.length-1];
 }
-
 function getTotalDuration(){
   let max=0;
-  players.forEach(p=>{
-    let t=0;
-    getPlayerTimeline(p.id).forEach(mv=>{ t+=getMoveDuration(mv); });
-    max=Math.max(max,t);
-  });
+  players.forEach(p=>{ let t=0; getPlayerTimeline(p.id).forEach(mv=>t+=getMoveDuration(mv)); max=Math.max(max,t); });
   return max||3;
 }
 
 function togglePlay(){
-  if(animPlaying){ pauseAnim(); return; }
-  if(!moves.length){ tip('Draw some moves first, then hit Play!'); return; }
+  if(animPlaying){pauseAnim();return;}
+  if(!moves.length){tip('Draw some moves first, then hit Play!');return;}
   animPlaying=true; animTime=0; animLastTs=null;
   document.getElementById('playBtn').textContent='⏸ Pause';
   requestAnimationFrame(animLoop);
 }
-function pauseAnim(){
-  animPlaying=false;
-  document.getElementById('playBtn').textContent='▶ Play';
-}
+function pauseAnim(){ animPlaying=false; document.getElementById('playBtn').textContent='▶ Play'; }
 function stopAnim(){
   animPlaying=false; animTime=0;
   if(animRaf) cancelAnimationFrame(animRaf);
@@ -864,19 +823,16 @@ function stopAnim(){
 function animLoop(ts){
   if(!animPlaying) return;
   if(animLastTs!==null){
-    animTime += (ts-animLastTs)/1000;
-    if(animTime >= getTotalDuration()){
-      animTime = getTotalDuration();
-      animPlaying=false;
-      document.getElementById('playBtn').textContent='▶ Play';
-    }
+    animTime+=(ts-animLastTs)/1000;
+    if(animTime>=getTotalDuration()){ animTime=getTotalDuration(); animPlaying=false; document.getElementById('playBtn').textContent='▶ Play'; }
   }
-  animLastTs=ts;
-  render();
-  if(animPlaying) requestAnimationFrame(animLoop);
+  animLastTs=ts; render();
+  if(animPlaying) animRaf=requestAnimationFrame(animLoop);
 }
 
-// ── RENDER ───────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
 function render(){
   drawRink();
   drawAllMoves();
@@ -885,13 +841,12 @@ function render(){
   drawDragToken();
 }
 
-// ── CANVAS EVENTS ────────────────────────────────────────────
-function canvasXY(e){
-  const r=canvas.getBoundingClientRect();
-  return {cx:e.clientX-r.left, cy:e.clientY-r.top};
-}
+// ─────────────────────────────────────────────
+// CANVAS EVENTS
+// ─────────────────────────────────────────────
+function canvasXY(e){ const r=canvas.getBoundingClientRect(); return{cx:e.clientX-r.left,cy:e.clientY-r.top}; }
 function playerAt(cx,cy){
-  const r=Math.max(14,Math.min(22,CW/24))+4;
+  const r=Math.max(14,Math.min(22,CW/22))+5;
   return players.find(p=>{ const pos=r2c(p.x,p.y); const dx=cx-pos.x,dy=cy-pos.y; return dx*dx+dy*dy<=r*r; });
 }
 
@@ -901,45 +856,44 @@ function onCDown(e){
   const p=playerAt(cx,cy);
 
   if(mode==='del'){
-    if(p){ players=players.filter(pl=>pl.id!==p.id); moves=moves.filter(m=>m.playerId!==p.id); selectedId=null; selInfo(null); render(); } return;
+    if(p){
+      players=players.filter(pl=>pl.id!==p.id);
+      moves=moves.filter(m=>m.playerId!==p.id);
+      selectedId=null; selInfo(null); buildGrid(); render();
+    }
+    return;
   }
   if(mode==='select'){
     if(p){ dragPlayer=p; const pos=r2c(p.x,p.y); dragOff={x:cx-pos.x,y:cy-pos.y}; selectedId=p.id; selInfo(p); }
     else { selectedId=null; selInfo(null); }
     render(); return;
   }
-
-  // Draw modes: hold and drag on a player to trace a free-form path
+  // Draw modes
   if(p){
     selectedId=p.id; isDrawing=true;
     currentWaypoints=[{x:p.x,y:p.y}];
     drawingMove={playerId:p.id,type:mode};
     selInfo(p);
-    tip(`Drag to draw the ${modeLabel(mode)} path — release to finish`);
+    tip(`Drag to draw ${modeLabel(mode)} path — release to finish`);
   } else {
     selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; selInfo(null);
   }
   render();
 }
 
-function clampX(x){ return Math.max(0,Math.min(iceType==='full'?R.W:R.W/2,x)); }
-function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-
 function onCMove(e){
   if(animPlaying) return;
   const {cx,cy}=canvasXY(e);
   if(dragPlayer){
     const nr=c2r(cx-dragOff.x,cy-dragOff.y);
-    dragPlayer.x=clampX(nr.x); dragPlayer.y=clamp(nr.y,0,R.H);
+    dragPlayer.x=clampX(nr.x); dragPlayer.y=clamp(nr.y,2,R.H-2);
     render(); return;
   }
   if(isDrawing&&drawingMove){
     const rp=c2r(cx,cy);
     const last=currentWaypoints[currentWaypoints.length-1];
-    const dx=rp.x-last.x, dy=rp.y-last.y;
-    if(dx*dx+dy*dy>0.8){
-      currentWaypoints.push({x:clampX(rp.x),y:clamp(rp.y,0,R.H)});
-    }
+    const dx=rp.x-last.x,dy=rp.y-last.y;
+    if(dx*dx+dy*dy>0.7) currentWaypoints.push({x:clampX(rp.x),y:clamp(rp.y,2,R.H-2)});
     render();
   }
 }
@@ -952,7 +906,7 @@ function finishDraw(){
       const last=simp[simp.length-1];
       src.x=last.x; src.y=last.y;
       moves.push({id:'mv'+Date.now()+Math.random(),playerId:src.id,type:drawingMove.type,waypoints:simp,color:src.color});
-      tip(`${modeLabel(drawingMove.type)} drawn! Click the player again to chain another move.`);
+      tip(`${modeLabel(drawingMove.type)} path added. Click player again to chain another move.`);
     }
   }
   isDrawing=false; currentWaypoints=[]; drawingMove=null;
@@ -960,8 +914,17 @@ function finishDraw(){
 
 function onCUp(e){ if(dragPlayer){dragPlayer=null;return;} finishDraw(); render(); }
 function onCLeave(){ dragPlayer=null; finishDraw(); render(); }
+function cancelDraw(){ isDrawing=false; currentWaypoints=[]; drawingMove=null; selectedId=null; selInfo(null); render(); }
 
-// ── GLOBAL MOUSE (token drag) ────────────────────────────────
+// ─────────────────────────────────────────────
+// GLOBAL MOUSE — sidebar token drag
+// ─────────────────────────────────────────────
+function startTokenDrag(e,pos){
+  e.preventDefault();
+  dragToken={base:pos.base,color:pos.color,name:pos.name};
+  mousePos={x:e.clientX,y:e.clientY};
+  tip(`Drag ${pos.name||pos.base} onto the ice`);
+}
 function onGMove(e){
   mousePos={x:e.clientX,y:e.clientY};
   if(dragToken||isDrawing) render();
@@ -973,45 +936,40 @@ function onGUp(e){
     if(cx>=0&&cy>=0&&cx<=CW&&cy<=CH){
       const rp=c2r(cx,cy);
       const id='p'+Date.now()+Math.random();
-      players.push({id,label:dragToken.label,color:dragToken.color,x:clampX(rp.x),y:clamp(rp.y,0,R.H)});
+      const label=getLabel(dragToken.base);
+      players.push({id,base:dragToken.base,label,color:dragToken.color,x:clampX(rp.x),y:clamp(rp.y,2,R.H-2)});
       selectedId=id; selInfo(players[players.length-1]);
-      tip(`${dragToken.label} placed! Select a move type then click to draw paths.`);
+      buildGrid();
+      tip(`${label} placed — select a move type then drag to draw paths`);
     }
     dragToken=null; render();
   }
 }
 
-function startTokenDrag(e,pos){
-  e.preventDefault();
-  dragToken={label:pos.label,color:pos.color};
-  mousePos={x:e.clientX,y:e.clientY};
-  tip(`Drag ${pos.label} onto the ice`);
-}
-
-function cancelDraw(){
-  isDrawing=false; currentWaypoints=[]; drawingMove=null; selectedId=null; selInfo(null); render();
-}
-
-// ── CONTROLS ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// CONTROLS
+// ─────────────────────────────────────────────
 function setIce(type){
-  iceType=type; players=[]; moves=[]; selectedId=null; drawingMove=null;
+  iceType=type; players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null;
   document.querySelectorAll('.ice-btn').forEach((b,i)=>b.classList.toggle('active',(type==='full'&&i===0)||(type==='half'&&i===1)));
-  resize();
+  buildGrid(); resize();
 }
 function setMode(m){
-  mode=m; drawingMove=null;
+  mode=m; drawingMove=null; isDrawing=false; currentWaypoints=[];
   document.querySelectorAll('.move-btn').forEach(b=>b.classList.toggle('active',b.dataset.m===m));
-  const tips={select:'Click to select & drag players.',skate:'Click player → click destination.',skatePuck:'Click player → click destination (squiggly = puck carrier).',pass:'Click player → click destination (dotted = pass).',shot:'Click player → click destination (double line = shot).',del:'Click a player to remove them.'};
+  const tips={select:'Click to select & drag players.',skate:'Click &amp; drag a player to draw a skate path.',skatePuck:'Click &amp; drag a player to draw a skate-with-puck path.',pass:'Click &amp; drag a player to draw a pass.',shot:'Click &amp; drag a player to draw a shot.',del:'Click a player to remove them from the ice.'};
   tip(tips[m]||'');
 }
 function modeLabel(m){return{skate:'Skate',skatePuck:'Skate w/Puck',pass:'Pass',shot:'Shot'}[m]||m;}
 function setSpeed(v){ animSpeed=parseFloat(v); document.getElementById('speedLbl').textContent=parseFloat(v).toFixed(2).replace(/\.?0+$/,'')+'x'; }
-function resetAll(){ players=[]; moves=[]; selectedId=null; drawingMove=null; stopAnim(); tip('Board cleared.'); render(); }
-function clearMoves(){ moves=[]; drawingMove=null; stopAnim(); tip('All moves cleared. Players stay in place.'); render(); }
+function resetAll(){ players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); buildGrid(); tip('Board cleared.'); render(); }
+function clearMoves(){ moves=[]; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); tip('All moves cleared.'); render(); }
 function tip(t){ document.getElementById('tipbar').textContent=t; }
 function selInfo(p){ const el=document.getElementById('selInfo'); if(p){el.textContent=`Selected: ${p.label}`;el.style.display='block';}else el.style.display='none'; }
 
-// ── MODAL ────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// MODAL
+// ─────────────────────────────────────────────
 function openModal(){ document.getElementById('modal').classList.add('open'); document.getElementById('customLbl').value=''; document.getElementById('customLbl').focus(); }
 function closeModal(){ document.getElementById('modal').classList.remove('open'); }
 function addCustom(){
@@ -1019,11 +977,10 @@ function addCustom(){
   if(!lbl) return;
   const sel=document.querySelector('.cswatch.sel');
   const color=sel?sel.style.background:PALETTE[0];
-  customPositions.push({label:lbl,color,name:lbl});
+  customPositions.push({base:lbl,color,name:lbl});
   buildGrid(); closeModal();
 }
 document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal')) closeModal(); });
-document.getElementById('mOK').addEventListener('click',addCustom);
 document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('modal').classList.contains('open')) addCustom(); });
 
 init();
