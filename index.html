@@ -214,7 +214,7 @@ const PALETTE = ['#FF6B35','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DA8BFF',
 const R = {
   W:200, H:85,
   cornerR:28,
-  goalLineX:11,
+  goalLineX:13.2,
   blueLineX:75,
   ezFOy:[21.5,63.5],
   ezFOxOff:20,
@@ -358,11 +358,14 @@ function resize(){
   const wrap = document.getElementById('canvas-wrap');
   const aw = wrap.clientWidth-24, ah = wrap.clientHeight-24;
   const rW = iceType==='full'?R.W:R.W/2;
-  const scale = Math.min(aw/rW, ah/R.H);
-  CW = Math.round(rW*scale); CH = Math.round(R.H*scale);
+  // 25% wider: scale so the wider canvas still fits available space
+  const scale = Math.min(aw/(rW*1.25), ah/R.H);
+  CW = Math.round(rW*scale*1.25); CH = Math.round(R.H*scale);
   canvas.width=CW; canvas.height=CH;
   render();
 }
+// Average sx/sy so circles stay visually round on the wider canvas
+function circR(r){ return (sx(r)+sy(r))/2; }
 
 function r2c(rx,ry){ const rW=iceType==='full'?R.W:R.W/2; return{x:rx/rW*CW,y:ry/R.H*CH}; }
 function c2r(cx,cy){ const rW=iceType==='full'?R.W:R.W/2; return{x:cx/CW*rW,y:cy/CH*R.H}; }
@@ -440,8 +443,9 @@ function drawLines(half, B){
   const glL=sx(R.goalLineX), glR=sx(R.W-R.goalLineX);
   const blL=sx(R.blueLineX), blR=sx(R.W-R.blueLineX);
   const cx2=CW/2, cy=CH/2;
-  const LW=Math.max(1.5, sx(1.5));   // thin line weight
-  const BLW=Math.max(2.5, sx(2.8));  // blue line weight
+  const LW=Math.max(1.5, sx(1.5));        // thin line weight
+  const BLW=Math.max(1.9, sx(2.1));       // blue line width (25% thinner)
+  const CLW=Math.max(1.1, LW*0.75);       // faceoff circle stroke (25% thinner)
 
   if(half==='full'){
     vline(glL,'#cc0000',LW,B); vline(glR,'#cc0000',LW,B);
@@ -456,20 +460,20 @@ function drawLines(half, B){
     ctx.beginPath(); ctx.moveTo(cx2,B); ctx.lineTo(cx2,CH-B); ctx.stroke();
     ctx.setLineDash([]);
 
-    circle(cx2,cy,sx(R.circleR),'#1a4ab0',LW);
-    dot(cx2,cy,sx(1.3),'#cc0000');
+    circle(cx2,cy,circR(R.circleR),'#1a4ab0',LW);
+    dot(cx2,cy,circR(1.3),'#cc0000');
 
     const eys=R.ezFOy.map(y=>sy(y));
     [[glL+sx(R.ezFOxOff),eys[0]],[glL+sx(R.ezFOxOff),eys[1]],
      [glR-sx(R.ezFOxOff),eys[0]],[glR-sx(R.ezFOxOff),eys[1]]].forEach(([fx,fy])=>{
-      circle(fx,fy,sx(R.circleR),'#cc0000',LW);
+      circle(fx,fy,circR(R.circleR),'#cc0000',CLW);
       hashMarks(fx,fy);
       dot(fx,fy,sx(1.3),'#cc0000');
     });
 
     const nys=R.nzFOy.map(y=>sy(y));
     [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]],
-     [blR-sx(R.nzFOxOff),nys[0]],[blR-sx(R.nzFOxOff),nys[1]]].forEach(([fx,fy])=>dot(fx,fy,sx(1.3),'#cc0000'));
+     [blR-sx(R.nzFOxOff),nys[0]],[blR-sx(R.nzFOxOff),nys[1]]].forEach(([fx,fy])=>dot(fx,fy,circR(1.3),'#cc0000'));
 
     drawCrease(glL,cy,1); drawNet(glL,cy,1);
     drawCrease(glR,cy,-1); drawNet(glR,cy,-1);
@@ -481,17 +485,17 @@ function drawLines(half, B){
     const eys=R.ezFOy.map(y=>sy(y));
     const fx=glL+sx(R.ezFOxOff);
     [[fx,eys[0]],[fx,eys[1]]].forEach(([x,y])=>{
-      circle(x,y,sx(R.circleR),'#cc0000',LW);
+      circle(x,y,circR(R.circleR),'#cc0000',CLW);
       hashMarks(x,y);
-      dot(x,y,sx(1.3),'#cc0000');
+      dot(x,y,circR(1.3),'#cc0000');
     });
 
     const nys=R.nzFOy.map(y=>sy(y));
-    [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]]].forEach(([x,y])=>dot(x,y,sx(1.3),'#cc0000'));
+    [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]]].forEach(([x,y])=>dot(x,y,circR(1.3),'#cc0000'));
 
     // Partial centre circle at right edge
-    circle(CW,cy,sx(R.circleR),'#1a4ab0',LW);
-    dot(CW,cy,sx(1.3),'#cc0000');
+    circle(CW,cy,circR(R.circleR),'#1a4ab0',LW);
+    dot(CW,cy,circR(1.3),'#cc0000');
 
     // Right edge: dashed red line (template shows dashes, not solid band)
     ctx.strokeStyle='#cc0000'; ctx.lineWidth=LW;
@@ -516,11 +520,7 @@ function dot(x,y,r,c){
 }
 
 function hashMarks(cx,cy){
-  // Exact match to template:
-  // - 2 tick marks at top of circle boundary pointing inward
-  // - 2 tick marks at bottom pointing inward
-  // - 4 L-brackets near center forming a # (hashtag) pattern
-  const cr=sx(R.circleR);
+  const cr=circR(R.circleR);
   const lw=Math.max(1,sx(1));
   ctx.strokeStyle='#cc0000'; ctx.lineWidth=lw; ctx.setLineDash([]);
 
@@ -555,7 +555,7 @@ function hashMarks(cx,cy){
 }
 
 function drawCrease(gx,gy,dir){
-  const cr=sx(R.creaseR);
+  const cr=circR(R.creaseR);
   ctx.fillStyle='rgba(163,210,255,0.7)';
   ctx.strokeStyle='#1a4ab0'; ctx.lineWidth=Math.max(1,sx(1.1)); ctx.setLineDash([]);
   ctx.beginPath();
