@@ -359,8 +359,8 @@ function resize(){
   const aw = wrap.clientWidth-24, ah = wrap.clientHeight-24;
   const rW = iceType==='full'?R.W:R.W/2;
   // 25% wider: scale so the wider canvas still fits available space
-  const scale = Math.min(aw/(rW*1.25), ah/R.H);
-  CW = Math.round(rW*scale*1.25); CH = Math.round(R.H*scale);
+  const scale = Math.min(aw/(rW*1.25), ah/(R.H*1.5));
+  CW = Math.round(rW*scale*1.25); CH = Math.round(R.H*scale*1.5);
   canvas.width=CW; canvas.height=CH;
   render();
 }
