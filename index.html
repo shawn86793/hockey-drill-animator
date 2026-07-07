@@ -1161,7 +1161,9 @@ function finishDraw(){
   if(isDrawing&&drawingMove&&currentWaypoints.length>=2){
     const src=players.find(pl=>pl.id===drawingMove.playerId);
     if(src){
-      const simp=simplifyPath(currentWaypoints,1.2);
+      const t=drawingMove.type;
+      const raw=(t==='pass'||t==='shot')?[currentWaypoints[0],currentWaypoints[currentWaypoints.length-1]]:currentWaypoints;
+      const simp=simplifyPath(raw,1.2);
       // Player icon stays at placed position — only moves during animation
       moves.push({id:'mv'+Date.now()+Math.random(),playerId:src.id,type:drawingMove.type,waypoints:simp,color:src.color,actId:currentActId});
       tip(`${modeLabel(drawingMove.type)} path added. Click player again to chain another move.`);
