@@ -778,7 +778,10 @@ function drawAllMoves(){
         if(animPlaying){ if(prog>0&&prog<1) drawPassPuck(pts[pts.length-1]); }
         else drawPassMulti(pts);
         break;
-      case 'shot':      drawShotMulti(pts); break;
+      case 'shot':
+        drawShotMulti(pts);
+        if(animPlaying&&prog>0&&prog<1) drawShotPuck(pts[pts.length-1]);
+        break;
     }
     ctx.restore();
   });
@@ -844,6 +847,14 @@ function drawPassMulti(pts){
   ctx.beginPath(); ctx.moveTo(pf.x,pf.y); ctx.lineTo(pl.x,pl.y); ctx.stroke(); ctx.setLineDash([]);
   const l=pts[pts.length-1]; arrow(l.x,l.y,endAngle(pts),AS(),'#00a8ff');
   ctx.lineCap='butt'; ctx.lineJoin='miter';
+}
+function drawShotPuck(pt){
+  const pr=Math.max(2,Math.min(4,CW/140));
+  ctx.save();
+  ctx.shadowColor='#ff2200'; ctx.shadowBlur=14;
+  ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(pt.x,pt.y,pr,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0; ctx.strokeStyle='#ff4422'; ctx.lineWidth=1.2; ctx.stroke();
+  ctx.restore();
 }
 function drawPassPuck(pt){
   const pr=Math.max(1.5,Math.min(2.5,CW/200));
