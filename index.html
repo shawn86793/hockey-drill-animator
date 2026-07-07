@@ -83,6 +83,17 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 #playInfo:focus{border-color:#1a4a6a;background:rgba(255,255,255,.05)}
 #playInfo::placeholder{color:#244a62}
 
+/* ── ACT BAR ── */
+#act-bar{background:#060f1e;border-bottom:1px solid #0d2035;padding:7px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.act-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#4a7a9a;white-space:nowrap}
+#act-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.act-tab{padding:5px 18px;border-radius:14px;border:1px solid #1a3a5a;background:#0a1a28;color:#5a8aaa;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px;transition:all .15s;white-space:nowrap}
+.act-tab.active{background:linear-gradient(135deg,#004499,#0077cc);border-color:#0099ff;color:#fff;box-shadow:0 0 10px #0066ff44}
+.act-tab:hover:not(.active){border-color:#2a5a8a;color:#90c0e0}
+#addActBtn{padding:5px 13px;border-radius:14px;border:1px dashed #1a4a6a;background:transparent;color:#3a8ab8;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;white-space:nowrap}
+#addActBtn:hover{color:#00a8ff;border-color:#00a8ff;background:#00a8ff0e}
+.act-hint{font-size:10px;color:#2a5a7a;margin-left:auto;white-space:nowrap}
+
 /* ── MODAL ── */
 #modal{display:none;position:fixed;inset:0;background:rgba(0,5,15,.8);z-index:200;align-items:center;justify-content:center}
 #modal.open{display:flex}
@@ -123,6 +134,13 @@ input[type=range]{width:100%;accent-color:#00a8ff}
       <button class="ice-btn" onclick="setIce('half')">Half Ice</button>
     </div>
   </div>
+</div>
+
+<div id="act-bar">
+  <span class="act-lbl">Acts</span>
+  <div id="act-tabs"></div>
+  <button id="addActBtn" onclick="addAct()">+ Add Act</button>
+  <span class="act-hint">Within an act, players move simultaneously · Acts play sequentially</span>
 </div>
 
 <div id="main">
@@ -263,6 +281,9 @@ let animSpeed = 1;
 let animRaf = null;
 let animLastTs = null;
 
+let acts = [{id:'act1',label:'Act 1'}];
+let currentActId = 'act1';
+
 let dragToken = null;
 let mousePos = {x:0,y:0};
 let dragPlayer = null;
@@ -281,6 +302,7 @@ function init(){
   ctx = canvas.getContext('2d');
   buildGrid();
   buildPalette();
+  buildActBar();
   resize();
   window.addEventListener('resize', resize);
   canvas.addEventListener('mousedown', onCDown);
@@ -787,7 +809,7 @@ function drawPassPuck(pt){
   ctx.save();
   ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=6;
   ctx.fillStyle='#111';
-  ctx.beginPath(); ctx.ellipse(pt.x,pt.y,pr*1.5,pr*0.85,0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(pt.x,pt.y,pr,0,Math.PI*2); ctx.fill();
   ctx.shadowBlur=0;
   ctx.strokeStyle='#555'; ctx.lineWidth=1;
   ctx.stroke();
@@ -877,16 +899,30 @@ function drawDragToken(){
 // ANIMATION
 // ─────────────────────────────────────────────
 function getMoveDuration(mv){
-  // Pass/shot travel at puck speed (~100 ft/s); skaters at ~28 ft/s
-  const spd=(mv.type==='pass'||mv.type==='shot')?100:28;
+  // Pass/shot travel at puck speed (~50 ft/s); skaters at ~28 ft/s
+  const spd=(mv.type==='pass'||mv.type==='shot')?50:28;
   return (pathTotalLen(mv.waypoints)/spd)/animSpeed;
 }
 function getPlayerTimeline(pid){ return moves.filter(m=>m.playerId===pid); }
+function actId(mv){ return mv.actId||acts[0].id; }
+function getActDuration(aid){
+  const am=moves.filter(m=>actId(m)===aid);
+  if(!am.length) return 0;
+  const pids=[...new Set(am.map(m=>m.playerId))];
+  let max=0;
+  pids.forEach(pid=>{ let t=0; am.filter(m=>m.playerId===pid).forEach(m=>t+=getMoveDuration(m)); max=Math.max(max,t); });
+  return max;
+}
+function getActStartTime(aid){
+  let t=0; for(const a of acts){ if(a.id===aid) return t; t+=getActDuration(a.id); } return t;
+}
 function getMoveStartTime(mv){
-  // Global sequential order: each move starts when the previous one ends
+  const aid=actId(mv);
+  const actStart=getActStartTime(aid);
+  const playerActMoves=moves.filter(m=>actId(m)===aid&&m.playerId===mv.playerId);
   let t=0;
-  for(const m of moves){ if(m.id===mv.id) return t; t+=getMoveDuration(m); }
-  return t;
+  for(const m of playerActMoves){ if(m.id===mv.id) return actStart+t; t+=getMoveDuration(m); }
+  return actStart+t;
 }
 function getMoveProgress(mv){
   const st=getMoveStartTime(mv), dur=getMoveDuration(mv);
@@ -898,8 +934,13 @@ function getMoveProgress(mv){
 // Where a player will be after all their skate/skatePuck moves complete
 // (used as starting point when drawing a new path)
 function getPlayerLogicalPos(p){
+  // Position after all skates up to and including current act
+  const curActIdx=acts.findIndex(a=>a.id===currentActId);
+  const visibleAids=acts.slice(0,curActIdx+1).map(a=>a.id);
   let pos={x:p.x,y:p.y};
-  for(const mv of getPlayerTimeline(p.id)){
+  for(const mv of moves){
+    if(mv.playerId!==p.id) continue;
+    if(!visibleAids.includes(actId(mv))) continue;
     if(mv.type==='skate'||mv.type==='skatePuck')
       pos=mv.waypoints[mv.waypoints.length-1];
   }
@@ -920,7 +961,7 @@ function getAnimPos(p){
   return pos;
 }
 function getTotalDuration(){
-  let t=0; moves.forEach(mv=>t+=getMoveDuration(mv)); return t||3;
+  let t=0; acts.forEach(a=>t+=getActDuration(a.id)); return t||3;
 }
 
 function togglePlay(){
@@ -1023,7 +1064,7 @@ function finishDraw(){
     if(src){
       const simp=simplifyPath(currentWaypoints,1.2);
       // Player icon stays at placed position — only moves during animation
-      moves.push({id:'mv'+Date.now()+Math.random(),playerId:src.id,type:drawingMove.type,waypoints:simp,color:src.color});
+      moves.push({id:'mv'+Date.now()+Math.random(),playerId:src.id,type:drawingMove.type,waypoints:simp,color:src.color,actId:currentActId});
       tip(`${modeLabel(drawingMove.type)} path added. Click player again to chain another move.`);
     }
   }
@@ -1067,11 +1108,36 @@ function onGUp(e){
 // ─────────────────────────────────────────────
 // CONTROLS
 // ─────────────────────────────────────────────
+// ── ACT CONTROLS ──
+function buildActBar(){
+  const tabs=document.getElementById('act-tabs');
+  tabs.innerHTML='';
+  acts.forEach(act=>{
+    const btn=document.createElement('button');
+    btn.className='act-tab'+(act.id===currentActId?' active':'');
+    btn.textContent=act.label;
+    btn.onclick=()=>setCurrentAct(act.id);
+    tabs.appendChild(btn);
+  });
+}
+function setCurrentAct(id){
+  currentActId=id; isDrawing=false; currentWaypoints=[]; drawingMove=null;
+  selectedId=null; selInfo(null);
+  buildActBar(); render();
+  tip(`Editing ${acts.find(a=>a.id===id).label} — players move simultaneously within an act`);
+}
+function addAct(){
+  const id='act'+Date.now();
+  acts.push({id,label:'Act '+(acts.length+1)});
+  setCurrentAct(id);
+}
+function resetActs(){ acts=[{id:'act1',label:'Act 1'}]; currentActId='act1'; buildActBar(); }
+
 function setIce(type){
   iceType=type; players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null;
   document.querySelectorAll('.ice-btn').forEach((b,i)=>b.classList.toggle('active',(type==='full'&&i===0)||(type==='half'&&i===1)));
   document.getElementById('canvas-wrap').className = type==='full' ? 'full-mode' : 'half-mode';
-  buildGrid(); resize();
+  resetActs(); buildGrid(); resize();
 }
 function setMode(m){
   mode=m; drawingMove=null; isDrawing=false; currentWaypoints=[];
@@ -1081,8 +1147,8 @@ function setMode(m){
 }
 function modeLabel(m){return{skate:'Skate',skatePuck:'Skate w/Puck',pass:'Pass',shot:'Shot'}[m]||m;}
 function setSpeed(v){ animSpeed=parseFloat(v); document.getElementById('speedLbl').textContent=parseFloat(v).toFixed(2).replace(/\.?0+$/,'')+'x'; }
-function resetAll(){ players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); buildGrid(); tip('Board cleared.'); render(); }
-function clearMoves(){ moves=[]; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); tip('All moves cleared.'); render(); }
+function resetAll(){ players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); buildGrid(); tip('Board cleared.'); render(); }
+function clearMoves(){ moves=[]; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); tip('All moves cleared.'); render(); }
 function tip(t){ document.getElementById('tipbar').textContent=t; }
 function selInfo(p){ const el=document.getElementById('selInfo'); if(p){el.textContent=`Selected: ${p.label}`;el.style.display='block';}else el.style.display='none'; }
 
