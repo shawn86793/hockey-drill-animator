@@ -865,8 +865,9 @@ function drawDragToken(){
 function getMoveDuration(mv){ return (pathTotalLen(mv.waypoints)/28)/animSpeed; }
 function getPlayerTimeline(pid){ return moves.filter(m=>m.playerId===pid); }
 function getMoveStartTime(mv){
+  // Global sequential order: each move starts when the previous one ends
   let t=0;
-  for(const m of getPlayerTimeline(mv.playerId)){ if(m.id===mv.id) return t; t+=getMoveDuration(m); }
+  for(const m of moves){ if(m.id===mv.id) return t; t+=getMoveDuration(m); }
   return t;
 }
 function getMoveProgress(mv){
@@ -888,26 +889,20 @@ function getPlayerLogicalPos(p){
 }
 
 function getAnimPos(p){
-  const tl=getPlayerTimeline(p.id);
-  if(!tl.length) return{x:p.x,y:p.y};
-  let elapsed=0, pos={x:p.x,y:p.y};
-  for(const mv of tl){
-    const dur=getMoveDuration(mv);
+  let pos={x:p.x,y:p.y};
+  for(const mv of moves){
+    if(mv.playerId!==p.id) continue;
+    const st=getMoveStartTime(mv), dur=getMoveDuration(mv);
     if(mv.type==='skate'||mv.type==='skatePuck'){
-      // Player moves along this path
-      if(animTime<elapsed+dur)
-        return pointOnPath(mv.waypoints, dur>0?(animTime-elapsed)/dur:1);
+      if(animTime<st) return pos;
+      if(animTime<st+dur) return pointOnPath(mv.waypoints, dur>0?(animTime-st)/dur:1);
       pos=mv.waypoints[mv.waypoints.length-1];
     }
-    // Pass/shot: player stays still, time still advances
-    elapsed+=dur;
   }
   return pos;
 }
 function getTotalDuration(){
-  let max=0;
-  players.forEach(p=>{ let t=0; getPlayerTimeline(p.id).forEach(mv=>t+=getMoveDuration(mv)); max=Math.max(max,t); });
-  return max||3;
+  let t=0; moves.forEach(mv=>t+=getMoveDuration(mv)); return t||3;
 }
 
 function togglePlay(){
