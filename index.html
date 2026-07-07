@@ -832,13 +832,6 @@ function drawPassMulti(pts){
   const pf=pts[0], pl=pts[pts.length-1];
   ctx.beginPath(); ctx.moveTo(pf.x,pf.y); ctx.lineTo(pl.x,pl.y); ctx.stroke(); ctx.setLineDash([]);
   const l=pts[pts.length-1]; arrow(l.x,l.y,endAngle(pts),AS(),'#00a8ff');
-  // Puck sitting on the passer
-  const pr=Math.max(1.5,Math.min(2.5,CW/200));
-  ctx.save();
-  ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=4;
-  ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(pts[0].x,pts[0].y,pr,0,Math.PI*2); ctx.fill();
-  ctx.shadowBlur=0; ctx.strokeStyle='#555'; ctx.lineWidth=0.8; ctx.stroke();
-  ctx.restore();
   ctx.lineCap='butt'; ctx.lineJoin='miter';
 }
 function drawPassPuck(pt){
@@ -881,6 +874,30 @@ function drawPreviewMove(){
 // ─────────────────────────────────────────────
 // DRAW PLAYERS
 // ─────────────────────────────────────────────
+function playerHasPuck(p){
+  if(animPlaying){
+    for(const mv of moves){
+      if(mv.playerId!==p.id||mv.type!=='skatePuck') continue;
+      const st=getMoveStartTime(mv),dur=getMoveDuration(mv);
+      if(animTime>=st&&animTime<=st+dur) return true;
+    }
+    return false;
+  }
+  // Design mode: last move in visible acts is skatePuck
+  const curIdx=acts.findIndex(a=>a.id===currentActId);
+  const vids=acts.slice(0,curIdx+1).map(a=>a.id);
+  const pm=moves.filter(m=>m.playerId===p.id&&vids.includes(actId(m)));
+  return pm.length>0&&pm[pm.length-1].type==='skatePuck';
+}
+function drawPuckDot(cx,cy,r){
+  const pr=Math.max(1.5,Math.min(2.5,CW/200));
+  const ox=cx+r*0.78, oy=cy+r*0.62;
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,0.9)'; ctx.shadowBlur=5;
+  ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(ox,oy,pr,0,Math.PI*2); ctx.fill();
+  ctx.shadowBlur=0; ctx.strokeStyle='#666'; ctx.lineWidth=0.8; ctx.stroke();
+  ctx.restore();
+}
 function drawPlayers(){
   players.forEach(p=>{
     const pos=animPlaying?getAnimPos(p):getPlayerLogicalPos(p);
@@ -907,6 +924,7 @@ function drawPlayers(){
     ctx.font=`800 ${fs}px 'Segoe UI',sans-serif`;
     ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(p.label,cp.x,cp.y);
+    if(playerHasPuck(p)) drawPuckDot(cp.x,cp.y,r);
   });
 }
 function hexLuma(hex){
