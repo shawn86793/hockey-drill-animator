@@ -536,8 +536,10 @@ function drawLines(half, B){
 
     circle(cx2,cy,circR(R.circleR),'#1a4ab0',LW);
     if(tLogo){
-      const lr=circR(R.circleR)*1.45;
-      ctx.save(); ctx.globalAlpha=0.13;
+      const lr=circR(R.circleR)*0.92;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx2,cy,lr,0,Math.PI*2); ctx.clip();
+      ctx.globalAlpha=0.13;
       ctx.drawImage(tLogo,cx2-lr,cy-lr,lr*2,lr*2);
       ctx.restore();
     }
