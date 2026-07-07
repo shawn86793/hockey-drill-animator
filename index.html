@@ -175,6 +175,10 @@ input[type=range]{width:100%;accent-color:#00a8ff}
           <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="5" x2="27" y2="5" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><line x1="3" y1="9" x2="27" y2="9" stroke="#ff4444" stroke-width="2" stroke-linecap="round"/><path d="M25,2 L32,7 L25,12" stroke="#ff4444" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Shot
         </button>
+        <button class="move-btn" data-m="delMove" onclick="setMode('delMove')">
+          <svg class="move-icon" viewBox="0 0 34 14"><line x1="3" y1="7" x2="22" y2="7" stroke="#ff9900" stroke-width="2" stroke-dasharray="4,2" stroke-linecap="round"/><text x="23" y="12" font-size="12" fill="#ff9900">✕</text></svg>
+          Delete Move
+        </button>
         <button class="move-btn" data-m="del" onclick="setMode('del')">
           <svg class="move-icon" viewBox="0 0 34 14"><text x="5" y="12" font-size="13" fill="#ff6666">✕</text></svg>
           Delete Player
@@ -1016,12 +1020,34 @@ function playerAt(cx,cy){
   const r=Math.max(8,Math.min(13,Math.round(CW/37)))+5;
   return players.find(p=>{ const lp=animPlaying?getAnimPos(p):getPlayerLogicalPos(p); const pos=r2c(lp.x,lp.y); const dx=cx-pos.x,dy=cy-pos.y; return dx*dx+dy*dy<=r*r; });
 }
+function ptSegDist(px,py,ax,ay,bx,by){
+  const dx=bx-ax, dy=by-ay, len2=dx*dx+dy*dy;
+  if(!len2) return Math.hypot(px-ax,py-ay);
+  const t=Math.max(0,Math.min(1,((px-ax)*dx+(py-ay)*dy)/len2));
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+function moveAt(cx,cy){
+  const tol=10;
+  for(let i=moves.length-1;i>=0;i--){
+    const mv=moves[i];
+    const pts=mv.waypoints.map(w=>r2c(w.x,w.y));
+    for(let j=1;j<pts.length;j++){
+      if(ptSegDist(cx,cy,pts[j-1].x,pts[j-1].y,pts[j].x,pts[j].y)<tol) return mv;
+    }
+  }
+  return null;
+}
 
 function onCDown(e){
   if(animPlaying) return;
   const {cx,cy}=canvasXY(e);
   const p=playerAt(cx,cy);
 
+  if(mode==='delMove'){
+    const mv=moveAt(cx,cy);
+    if(mv){ moves=moves.filter(m=>m.id!==mv.id); tip('Move deleted.'); render(); }
+    return;
+  }
   if(mode==='del'){
     if(p){
       players=players.filter(pl=>pl.id!==p.id);
@@ -1151,7 +1177,7 @@ function setIce(type){
 function setMode(m){
   mode=m; drawingMove=null; isDrawing=false; currentWaypoints=[];
   document.querySelectorAll('.move-btn').forEach(b=>b.classList.toggle('active',b.dataset.m===m));
-  const tips={select:'Click to select & drag players.',skate:'Click &amp; drag a player to draw a skate path.',skatePuck:'Click &amp; drag a player to draw a skate-with-puck path.',pass:'Click &amp; drag a player to draw a pass.',shot:'Click &amp; drag a player to draw a shot.',del:'Click a player to remove them from the ice.'};
+  const tips={select:'Click to select & drag players.',skate:'Click &amp; drag a player to draw a skate path.',skatePuck:'Click &amp; drag a player to draw a skate-with-puck path.',pass:'Click &amp; drag a player to draw a pass.',shot:'Click &amp; drag a player to draw a shot.',delMove:'Click any move line to delete it.',del:'Click a player to remove them from the ice.'};
   tip(tips[m]||'');
 }
 function modeLabel(m){return{skate:'Skate',skatePuck:'Skate w/Puck',pass:'Pass',shot:'Shot'}[m]||m;}
