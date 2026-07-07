@@ -101,6 +101,8 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 #addActBtn{padding:5px 13px;border-radius:14px;border:1px dashed #1a4a6a;background:transparent;color:#3a8ab8;cursor:pointer;font-size:11px;font-weight:600;transition:all .15s;white-space:nowrap}
 #addActBtn:hover{color:#00a8ff;border-color:#00a8ff;background:#00a8ff0e}
 .act-hint{font-size:10px;color:#2a5a7a;margin-left:auto;white-space:nowrap}
+#actSaveBtn{margin-left:12px;padding:5px 16px;border-radius:14px;border:1px solid #0a4a20;background:#051a0a;color:#00cc66;cursor:pointer;font-size:11px;font-weight:700;white-space:nowrap;transition:all .15s}
+#actSaveBtn:hover{background:#0a2a14;border-color:#00cc66;color:#00ff88}
 
 /* ── MODAL ── */
 #modal{display:none;position:fixed;inset:0;background:rgba(0,5,15,.8);z-index:200;align-items:center;justify-content:center}
@@ -149,6 +151,7 @@ input[type=range]{width:100%;accent-color:#00a8ff}
   <div id="act-tabs"></div>
   <button id="addActBtn" onclick="addAct()">+ Add Act</button>
   <span class="act-hint">Within an act, players move simultaneously · Acts play sequentially</span>
+  <button id="actSaveBtn" onclick="saveDrill()">💾 Save Drill</button>
 </div>
 
 <div id="main">
