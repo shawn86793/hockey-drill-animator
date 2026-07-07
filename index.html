@@ -539,7 +539,7 @@ function drawLines(half, B){
       const lr=circR(R.circleR)*0.92;
       ctx.save();
       ctx.beginPath(); ctx.arc(cx2,cy,lr,0,Math.PI*2); ctx.clip();
-      ctx.globalAlpha=0.13;
+      ctx.globalAlpha=0.25;
       ctx.drawImage(tLogo,cx2-lr,cy-lr,lr*2,lr*2);
       ctx.restore();
     }
