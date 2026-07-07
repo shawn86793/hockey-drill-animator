@@ -437,8 +437,8 @@ function resize(){
     CW = Math.round(R.W*scale*1.25); CH = Math.round(R.H*scale*1.5);
     canvas.width=CW; canvas.height=CH;
   } else {
-    // Portrait half ice: goal→far blue line (125ft) tall, rink width (85ft) wide
-    const scale = Math.min(aw/R.H, ah/halfW());
+    // Portrait half ice: goal→far blue line (125ft) tall, rink width (85ft) wide (+20%)
+    const scale = Math.min(aw/R.H, ah/halfW()) * 1.2;
     CW = Math.round(halfW()*scale); // landscape drawing width (long axis, 125ft)
     CH = Math.round(R.H*scale);     // landscape drawing height (short axis, 85ft)
     canvas.width=CH; canvas.height=CW; // portrait canvas: swap dims
@@ -586,14 +586,15 @@ function drawLines(half, B){
     ctx.beginPath(); ctx.moveTo(cx2h,B); ctx.lineTo(cx2h,CH-B); ctx.stroke();
     ctx.setLineDash([]);
 
-    // Full centre circle + T logo at centre ice
+    // Full centre circle + T logo at centre ice (rotated upright for portrait view)
     circle(cx2h,cy,circR(R.circleR),'#1a4ab0',LW);
     if(tLogo){
       const lr=circR(R.circleR)*0.92;
       ctx.save();
       ctx.beginPath(); ctx.arc(cx2h,cy,lr,0,Math.PI*2); ctx.clip();
       ctx.globalAlpha=0.25;
-      ctx.drawImage(tLogo,cx2h-lr,cy-lr,lr*2,lr*2);
+      ctx.translate(cx2h,cy); ctx.rotate(-Math.PI/2);
+      ctx.drawImage(tLogo,-lr,-lr,lr*2,lr*2);
       ctx.restore();
     }
     dot(cx2h,cy,circR(1.3),'#cc0000');
