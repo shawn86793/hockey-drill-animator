@@ -76,10 +76,14 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 /* ── RINK SECTION ── */
 #rink-section{position:relative;display:flex;align-items:center;justify-content:center}
 .full-mode #rink-section{flex:1;width:100%;min-height:0}
-.half-mode #rink-section{flex:0 0 58%;min-width:0}
+.half-mode #rink-section{flex:0 0 58%;min-width:0;overflow-y:auto;align-items:flex-start}
+.half-mode #rink-section::-webkit-scrollbar{width:4px}
+.half-mode #rink-section::-webkit-scrollbar-track{background:transparent}
+.half-mode #rink-section::-webkit-scrollbar-thumb{background:#1a3a5a;border-radius:2px}
 
 #rinkCanvas{display:block;cursor:crosshair}
 #tipbar{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,10,20,.88);border:1px solid #0d3050;color:#4a8ab0;padding:5px 16px;border-radius:20px;font-size:11px;pointer-events:none;white-space:nowrap;max-width:90%}
+.half-mode #tipbar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%)}
 #selInfo{position:absolute;top:10px;right:10px;background:rgba(0,168,255,.12);border:1px solid #00a8ff55;border-radius:8px;padding:6px 12px;font-size:11px;color:#00d4ff;display:none}
 
 /* ── INFO PANEL ── */
@@ -437,8 +441,8 @@ function resize(){
     CW = Math.round(R.W*scale*1.25); CH = Math.round(R.H*scale*1.5);
     canvas.width=CW; canvas.height=CH;
   } else {
-    // Portrait half ice: goal→far blue line (125ft) tall, rink width (85ft) wide
-    const scale = Math.min(aw/R.H, ah/halfW());
+    // Portrait half ice: 20% larger than fit; rink-section scrolls the small overflow
+    const scale = Math.min(aw/R.H, ah/halfW()) * 1.2;
     CW = Math.round(halfW()*scale); // landscape drawing width (long axis, 125ft)
     CH = Math.round(R.H*scale);     // landscape drawing height (short axis, 85ft)
     canvas.width=CH; canvas.height=CW; // portrait canvas: swap dims
@@ -1306,6 +1310,7 @@ function setIce(type){
   document.querySelectorAll('.ice-btn').forEach((b,i)=>b.classList.toggle('active',(type==='full'&&i===0)||(type==='half'&&i===1)));
   document.getElementById('canvas-wrap').className = type==='full' ? 'full-mode' : 'half-mode';
   resetActs(); buildGrid(); resize();
+  if(type==='half') document.getElementById('rink-section').scrollTop = 0;
 }
 function setMode(m){
   mode=m; drawingMove=null; isDrawing=false; currentWaypoints=[];
