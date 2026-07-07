@@ -124,19 +124,10 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 <body>
 
 <div id="header">
-  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="44" height="44" style="flex-shrink:0">
-    <rect width="100" height="100" rx="20" fill="#080e18"/>
-    <defs><radialGradient id="lg1" cx="50%" cy="40%" r="60%"><stop offset="0%" stop-color="#00a8ff" stop-opacity=".5"/><stop offset="100%" stop-color="#000" stop-opacity="0"/></radialGradient></defs>
-    <rect width="100" height="100" rx="20" fill="url(#lg1)" opacity=".3"/>
-    <path d="M10,70 Q30,30 92,52" stroke="#00a8ff" stroke-width="5" fill="none" stroke-linecap="round"/>
-    <path d="M30,18 Q60,5 88,30" stroke="#ff9900" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-    <rect x="26" y="24" width="48" height="9" rx="4" fill="white"/>
-    <rect x="43" y="24" width="14" height="44" rx="4" fill="white"/>
-    <text x="55" y="84" font-size="13" font-weight="900" fill="#ff9900" font-family="Arial,sans-serif">HQ</text>
-  </svg>
+  <img id="logo" src="TryoutHQ_Design_Logo_under_1MB.jpg" alt="TryoutHQ Design" style="height:48px;flex-shrink:0;object-fit:contain;border-radius:6px">
   <div>
-    <div id="title">HOCKEY DRILL ANIMATOR</div>
-    <div class="subtitle">THQ Sports</div>
+    <div id="title">TryoutHQ Design Animator</div>
+    <div class="subtitle">Athlete Assessment Systems</div>
   </div>
   <div class="header-right">
     <div class="ice-toggle">
@@ -313,6 +304,8 @@ let currentWaypoints = [];
 let drawingMove = null;
 
 let canvas, ctx, CW, CH;
+let tLogo = null;
+(function(){ const img=new Image(); img.onload=()=>{tLogo=img;}; img.src='TryoutHQ T- logo.png'; })();
 
 // ─────────────────────────────────────────────
 // INIT
@@ -542,6 +535,12 @@ function drawLines(half, B){
     ctx.setLineDash([]);
 
     circle(cx2,cy,circR(R.circleR),'#1a4ab0',LW);
+    if(tLogo){
+      const lr=circR(R.circleR)*1.45;
+      ctx.save(); ctx.globalAlpha=0.13;
+      ctx.drawImage(tLogo,cx2-lr,cy-lr,lr*2,lr*2);
+      ctx.restore();
+    }
     dot(cx2,cy,circR(1.3),'#cc0000');
 
     const eys=R.ezFOy.map(y=>sy(y));
