@@ -437,22 +437,23 @@ function resize(){
     CW = Math.round(R.W*scale*1.25); CH = Math.round(R.H*scale*1.5);
     canvas.width=CW; canvas.height=CH;
   } else {
-    // Portrait half ice: canvas is narrow×tall (R.H wide × R.W/2 tall in feet)
-    const scale = Math.min(aw/R.H, ah/(R.W/2));
-    CW = Math.round(R.W/2*scale); // landscape drawing width (long axis)
-    CH = Math.round(R.H*scale);   // landscape drawing height (short axis)
-    canvas.width=CH; canvas.height=CW; // portrait: swap for canvas element
+    // Portrait half ice: goal→far blue line (125ft) tall, rink width (85ft) wide
+    const scale = Math.min(aw/R.H, ah/halfW());
+    CW = Math.round(halfW()*scale); // landscape drawing width (long axis, 125ft)
+    CH = Math.round(R.H*scale);     // landscape drawing height (short axis, 85ft)
+    canvas.width=CH; canvas.height=CW; // portrait canvas: swap dims
   }
   render();
 }
 // Average sx/sy so circles stay visually round on the wider canvas
 function circR(r){ return (sx(r)+sy(r))/2; }
 
-function r2c(rx,ry){ const rW=iceType==='full'?R.W:R.W/2; return{x:rx/rW*CW,y:ry/R.H*CH}; }
-function c2r(cx,cy){ const rW=iceType==='full'?R.W:R.W/2; return{x:cx/CW*rW,y:cy/CH*R.H}; }
-function sx(d){ const rW=iceType==='full'?R.W:R.W/2; return d/rW*CW; }
+function halfW(){ return R.W-R.blueLineX; } // 125ft: goal to far blue line
+function r2c(rx,ry){ const rW=iceType==='full'?R.W:halfW(); return{x:rx/rW*CW,y:ry/R.H*CH}; }
+function c2r(cx,cy){ const rW=iceType==='full'?R.W:halfW(); return{x:cx/CW*rW,y:cy/CH*R.H}; }
+function sx(d){ const rW=iceType==='full'?R.W:halfW(); return d/rW*CW; }
 function sy(d){ return d/R.H*CH; }
-function clampX(x){ return Math.max(0,Math.min(iceType==='full'?R.W:R.W/2,x)); }
+function clampX(x){ return Math.max(0,Math.min(iceType==='full'?R.W:halfW(),x)); }
 function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
 
 // ─────────────────────────────────────────────
@@ -568,9 +569,36 @@ function drawLines(half, B){
     drawCrease(glR,cy,-1); drawNet(glR,cy,-1);
 
   } else {
+    // Goal line + near blue line
     vline(glL,'#cc0000',LW,B);
     vline(blL,'#1a4ab0',BLW,B);
 
+    // Far blue line (right edge = 125ft)
+    vline(CW,'#1a4ab0',BLW,B);
+
+    // Centre line at 100ft: solid red band + white dashes
+    const cx2h=sx(R.W/2);
+    const clW=Math.max(3,sx(1.8));
+    ctx.fillStyle='#cc0000';
+    ctx.fillRect(cx2h-clW/2, B, clW, CH-B*2);
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=clW*0.65;
+    ctx.setLineDash([sy(4.5),sy(3.5)]);
+    ctx.beginPath(); ctx.moveTo(cx2h,B); ctx.lineTo(cx2h,CH-B); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Full centre circle + T logo at centre ice
+    circle(cx2h,cy,circR(R.circleR),'#1a4ab0',LW);
+    if(tLogo){
+      const lr=circR(R.circleR)*0.92;
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx2h,cy,lr,0,Math.PI*2); ctx.clip();
+      ctx.globalAlpha=0.25;
+      ctx.drawImage(tLogo,cx2h-lr,cy-lr,lr*2,lr*2);
+      ctx.restore();
+    }
+    dot(cx2h,cy,circR(1.3),'#cc0000');
+
+    // End zone faceoff circles
     const eys=R.ezFOy.map(y=>sy(y));
     const fx=glL+sx(R.ezFOxOff);
     [[fx,eys[0]],[fx,eys[1]]].forEach(([x,y])=>{
@@ -579,18 +607,10 @@ function drawLines(half, B){
       dot(x,y,circR(1.3),'#cc0000');
     });
 
+    // Neutral zone faceoff dots (both blue lines)
     const nys=R.nzFOy.map(y=>sy(y));
-    [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]]].forEach(([x,y])=>dot(x,y,circR(1.3),'#cc0000'));
-
-    // Partial centre circle at right edge
-    circle(CW,cy,circR(R.circleR),'#1a4ab0',LW);
-    dot(CW,cy,circR(1.3),'#cc0000');
-
-    // Right edge: dashed red line (template shows dashes, not solid band)
-    ctx.strokeStyle='#cc0000'; ctx.lineWidth=LW;
-    ctx.setLineDash([sy(4.5),sy(3.5)]);
-    ctx.beginPath(); ctx.moveTo(CW,B); ctx.lineTo(CW,CH-B); ctx.stroke();
-    ctx.setLineDash([]);
+    [[blL+sx(R.nzFOxOff),nys[0]],[blL+sx(R.nzFOxOff),nys[1]],
+     [CW-sx(R.nzFOxOff),nys[0]],[CW-sx(R.nzFOxOff),nys[1]]].forEach(([x,y])=>dot(x,y,circR(1.3),'#cc0000'));
 
     drawCrease(glL,cy,1); drawNet(glL,cy,1);
   }
@@ -1079,8 +1099,8 @@ function animLoop(ts){
 function render(){
   if(iceType==='half'){
     ctx.save();
-    ctx.translate(0, canvas.height); // canvas.height = CW (portrait)
-    ctx.rotate(-Math.PI/2);
+    ctx.translate(canvas.width, 0); // canvas.width = CH (portrait)
+    ctx.rotate(Math.PI/2);
   }
   drawRink();
   drawAllMoves();
@@ -1096,8 +1116,8 @@ function render(){
 function canvasXY(e){
   const r=canvas.getBoundingClientRect();
   const sx=e.clientX-r.left, sy=e.clientY-r.top;
-  // Half ice portrait: screen (sx,sy) → landscape drawing coords
-  if(iceType==='half') return {cx:CW-sy, cy:sx};
+  // Half ice portrait (CW rotation): screen → landscape drawing coords
+  if(iceType==='half') return {cx:sy, cy:CH-sx};
   return {cx:sx, cy:sy};
 }
 function playerAt(cx,cy){
@@ -1214,7 +1234,7 @@ function onGUp(e){
     const rect=canvas.getBoundingClientRect();
     const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
     // Convert portrait screen coords → landscape drawing coords for hit test + r2c
-    const cx=iceType==='half'?CW-sy:sx, cy=iceType==='half'?sx:sy;
+    const cx=iceType==='half'?sy:sx, cy=iceType==='half'?CH-sx:sy;
     const inCanvas=sx>=0&&sy>=0&&sx<=canvas.width&&sy<=canvas.height;
     if(inCanvas){
       const rp=c2r(cx,cy);
