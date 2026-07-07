@@ -30,8 +30,10 @@ body{background:#060d16;color:#fff;font-family:'Segoe UI',sans-serif;height:100v
 .pos-info{flex:1;min-width:0}
 .pos-name{font-size:10px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pos-count{font-size:9px;color:#4a7a9a;margin-top:1px}
-.pos-add{width:22px;height:22px;border-radius:50%;border:1px solid #1a4a6a;background:#0a1a28;color:#4a8ab0;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.pos-add:hover{background:#00a8ff22;border-color:#00a8ff;color:#00a8ff}
+.pos-add,.pos-sub{width:22px;height:22px;border-radius:50%;border:1px solid #1a4a6a;background:#0a1a28;cursor:pointer;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.pos-add{color:#4a8ab0}.pos-add:hover{background:#00a8ff22;border-color:#00a8ff;color:#00a8ff}
+.pos-sub{color:#6a4a4a}.pos-sub:hover{background:#ff444422;border-color:#ff6666;color:#ff6666}
+.pos-sub:disabled{opacity:.25;cursor:default;pointer-events:none}
 
 #addCustomBtn{width:100%;margin-top:4px;padding:6px;border-radius:20px;border:1px dashed #1a4a6a;background:transparent;color:#3a8ab8;cursor:pointer;font-size:11px;transition:all .2s}
 #addCustomBtn:hover{background:#00a8ff14;color:#00a8ff;border-color:#00a8ff}
@@ -353,6 +355,14 @@ function buildGrid(){
     info.className = 'pos-info';
     info.innerHTML = `<div class="pos-name">${pos.name||pos.base}</div><div class="pos-count">${n > 0 ? n+' on ice' : 'drag or +'}</div>`;
 
+    // − button
+    const sub = document.createElement('button');
+    sub.className = 'pos-sub';
+    sub.textContent = '−';
+    sub.title = `Remove last ${pos.name||pos.base}`;
+    sub.disabled = n === 0;
+    sub.onclick = ()=> removeLastPlayer(pos.base);
+
     // + button
     const btn = document.createElement('button');
     btn.className = 'pos-add';
@@ -360,7 +370,7 @@ function buildGrid(){
     btn.title = `Add ${pos.name||pos.base} to center ice`;
     btn.onclick = ()=> addPlayerCenter(pos);
 
-    row.appendChild(tok); row.appendChild(info); row.appendChild(btn);
+    row.appendChild(tok); row.appendChild(info); row.appendChild(sub); row.appendChild(btn);
     g.appendChild(row);
   });
 
@@ -368,6 +378,15 @@ function buildGrid(){
   document.getElementById('playerCount').textContent = `(${players.length} on ice)`;
 }
 
+function removeLastPlayer(base){
+  const same = players.filter(p=>p.base===base);
+  if(!same.length) return;
+  const last = same[same.length-1];
+  players = players.filter(p=>p.id!==last.id);
+  moves = moves.filter(m=>m.playerId!==last.id);
+  if(selectedId===last.id){ selectedId=null; selInfo(null); }
+  buildGrid(); render();
+}
 function addPlayerCenter(pos){
   const label = getLabel(pos.base);
   const id = 'p'+Date.now()+Math.random();
