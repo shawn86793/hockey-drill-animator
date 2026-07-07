@@ -58,6 +58,12 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 #resetBtn:hover{color:#90c0e0;border-color:#2a4a6a}
 #clearBtn{width:100%;padding:6px;border-radius:7px;border:1px solid #3a1a00;background:#1a0a00;color:#cc6600;cursor:pointer;font-size:11px;transition:all .2s}
 #clearBtn:hover{background:#2a1500;color:#ff9900}
+.file-row{display:flex;gap:5px;margin-top:6px}
+#saveBtn{flex:1;padding:6px;border-radius:7px;border:1px solid #0a3a1a;background:#051a0a;color:#00cc66;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s}
+#saveBtn:hover{background:#0a2a14;border-color:#00cc66;color:#00ff88}
+#loadBtn{flex:1;padding:6px;border-radius:7px;border:1px solid #1a2a0a;background:#0e1a05;color:#88cc00;cursor:pointer;font-size:11px;font-weight:700;transition:all .2s}
+#loadBtn:hover{background:#182a08;border-color:#88cc00;color:#aaff00}
+#fileInput{display:none}
 
 .hint{font-size:9px;color:#2a4a5a;line-height:1.7}
 .hint strong{color:#3a6a8a}
@@ -202,6 +208,11 @@ input[type=range]{width:100%;accent-color:#00a8ff}
       </div>
       <button id="resetBtn" onclick="resetAll()">⟲ Reset All</button>
       <button id="clearBtn" onclick="clearMoves()">✕ Clear Moves</button>
+      <div class="file-row">
+        <button id="saveBtn" onclick="saveDrill()">💾 Save</button>
+        <button id="loadBtn" onclick="document.getElementById('fileInput').click()">📂 Open</button>
+      </div>
+      <input type="file" id="fileInput" accept=".json" onchange="loadDrill(this)">
     </div>
 
     <div class="hint">
@@ -1247,6 +1258,36 @@ function setSpeed(v){ animSpeed=parseFloat(v); document.getElementById('speedLbl
 function resetAll(){ players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); buildGrid(); tip('Board cleared.'); render(); }
 function clearMoves(){ moves=[]; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); tip('All moves cleared.'); render(); }
 function tip(t){ document.getElementById('tipbar').textContent=t; }
+
+function saveDrill(){
+  const data={version:1,iceType,acts,players,moves};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  a.href=url; a.download=`drill_${ts}.json`; a.click();
+  URL.revokeObjectURL(url);
+  tip('Drill saved to your computer.');
+}
+function loadDrill(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.version||!data.players||!data.moves) throw new Error('Invalid file');
+      players=data.players; moves=data.moves; acts=data.acts||[{id:'act1',label:'Act 1'}];
+      iceType=data.iceType||'full'; currentActId=acts[0].id;
+      selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null;
+      document.querySelectorAll('.ice-btn').forEach((b,i)=>b.classList.toggle('active',(iceType==='full'&&i===0)||(iceType==='half'&&i===1)));
+      document.getElementById('canvas-wrap').className=iceType==='full'?'full-mode':'half-mode';
+      stopAnim(); buildGrid(); buildActBar(); resize();
+      tip(`Loaded: ${file.name}`);
+    }catch(err){ tip('Error loading file — make sure it is a valid drill JSON.'); }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
 function selInfo(p){ const el=document.getElementById('selInfo'); if(p){el.textContent=`Selected: ${p.label}`;el.style.display='block';}else el.style.display='none'; }
 
 // ─────────────────────────────────────────────
