@@ -1148,11 +1148,24 @@ function buildActBar(){
   const tabs=document.getElementById('act-tabs');
   tabs.innerHTML='';
   acts.forEach(act=>{
+    const wrap=document.createElement('span');
+    wrap.style.cssText='display:inline-flex;align-items:center;gap:0';
     const btn=document.createElement('button');
     btn.className='act-tab'+(act.id===currentActId?' active':'');
+    btn.style.cssText=acts.length>1?'border-radius:14px 0 0 14px;padding-right:6px':'';
     btn.textContent=act.label;
     btn.onclick=()=>setCurrentAct(act.id);
-    tabs.appendChild(btn);
+    wrap.appendChild(btn);
+    if(acts.length>1){
+      const del=document.createElement('button');
+      del.className='act-tab'+(act.id===currentActId?' active':'');
+      del.style.cssText='border-radius:0 14px 14px 0;padding:5px 8px 5px 4px;border-left:none;font-size:10px';
+      del.title='Delete '+act.label;
+      del.textContent='✕';
+      del.onclick=(e)=>{e.stopPropagation();deleteAct(act.id);};
+      wrap.appendChild(del);
+    }
+    tabs.appendChild(wrap);
   });
 }
 function setCurrentAct(id){
@@ -1165,6 +1178,16 @@ function addAct(){
   const id='act'+Date.now();
   acts.push({id,label:'Act '+(acts.length+1)});
   setCurrentAct(id);
+}
+function deleteAct(id){
+  if(acts.length<=1) return;
+  const idx=acts.findIndex(a=>a.id===id);
+  moves=moves.filter(m=>(m.actId||acts[0].id)!==id);
+  acts.splice(idx,1);
+  // Relabel acts sequentially
+  acts.forEach((a,i)=>a.label='Act '+(i+1));
+  const nextId=acts[Math.min(idx,acts.length-1)].id;
+  setCurrentAct(nextId);
 }
 function resetActs(){ acts=[{id:'act1',label:'Act 1'}]; currentActId='act1'; buildActBar(); }
 
