@@ -432,10 +432,17 @@ function buildPalette(){
 function resize(){
   const section = document.getElementById('rink-section');
   const aw = section.clientWidth-8, ah = section.clientHeight-8;
-  const rW = iceType==='full'?R.W:R.W/2;
-  const scale = Math.min(aw/(rW*1.25), ah/(R.H*1.5));
-  CW = Math.round(rW*scale*1.25); CH = Math.round(R.H*scale*1.5);
-  canvas.width=CW; canvas.height=CH;
+  if(iceType==='full'){
+    const scale = Math.min(aw/(R.W*1.25), ah/(R.H*1.5));
+    CW = Math.round(R.W*scale*1.25); CH = Math.round(R.H*scale*1.5);
+    canvas.width=CW; canvas.height=CH;
+  } else {
+    // Portrait half ice: canvas is narrow×tall (R.H wide × R.W/2 tall in feet)
+    const scale = Math.min(aw/R.H, ah/(R.W/2));
+    CW = Math.round(R.W/2*scale); // landscape drawing width (long axis)
+    CH = Math.round(R.H*scale);   // landscape drawing height (short axis)
+    canvas.width=CH; canvas.height=CW; // portrait: swap for canvas element
+  }
   render();
 }
 // Average sx/sy so circles stay visually round on the wider canvas
@@ -962,7 +969,7 @@ function drawDragToken(){
   if(!dragToken) return;
   const rect=canvas.getBoundingClientRect();
   const cx=mousePos.x-rect.left, cy=mousePos.y-rect.top;
-  if(cx<-40||cy<-40||cx>CW+40||cy>CH+40) return;
+  if(cx<-40||cy<-40||cx>canvas.width+40||cy>canvas.height+40) return;
   const r=Math.max(8,Math.min(13,Math.round(CW/37)));
   ctx.globalAlpha=0.8; ctx.fillStyle=dragToken.color;
   ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
@@ -1070,17 +1077,29 @@ function animLoop(ts){
 // RENDER
 // ─────────────────────────────────────────────
 function render(){
+  if(iceType==='half'){
+    ctx.save();
+    ctx.translate(0, canvas.height); // canvas.height = CW (portrait)
+    ctx.rotate(-Math.PI/2);
+  }
   drawRink();
   drawAllMoves();
   drawPreviewMove();
   drawPlayers();
-  drawDragToken();
+  if(iceType==='half') ctx.restore();
+  drawDragToken(); // always in portrait/screen coords
 }
 
 // ─────────────────────────────────────────────
 // CANVAS EVENTS
 // ─────────────────────────────────────────────
-function canvasXY(e){ const r=canvas.getBoundingClientRect(); return{cx:e.clientX-r.left,cy:e.clientY-r.top}; }
+function canvasXY(e){
+  const r=canvas.getBoundingClientRect();
+  const sx=e.clientX-r.left, sy=e.clientY-r.top;
+  // Half ice portrait: screen (sx,sy) → landscape drawing coords
+  if(iceType==='half') return {cx:CW-sy, cy:sx};
+  return {cx:sx, cy:sy};
+}
 function playerAt(cx,cy){
   const r=Math.max(8,Math.min(13,Math.round(CW/37)))+5;
   return players.find(p=>{ const lp=animPlaying?getAnimPos(p):getPlayerLogicalPos(p); const pos=r2c(lp.x,lp.y); const dx=cx-pos.x,dy=cy-pos.y; return dx*dx+dy*dy<=r*r; });
@@ -1193,8 +1212,11 @@ function onGMove(e){
 function onGUp(e){
   if(dragToken){
     const rect=canvas.getBoundingClientRect();
-    const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
-    if(cx>=0&&cy>=0&&cx<=CW&&cy<=CH){
+    const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+    // Convert portrait screen coords → landscape drawing coords for hit test + r2c
+    const cx=iceType==='half'?CW-sy:sx, cy=iceType==='half'?sx:sy;
+    const inCanvas=sx>=0&&sy>=0&&sx<=canvas.width&&sy<=canvas.height;
+    if(inCanvas){
       const rp=c2r(cx,cy);
       const id='p'+Date.now()+Math.random();
       const label=getLabel(dragToken.base);
