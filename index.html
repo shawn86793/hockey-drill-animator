@@ -166,6 +166,14 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 .xmodal-pdf{padding:8px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#0055aa,#0088cc);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
 .xmodal-pdf:hover{background:linear-gradient(135deg,#0066cc,#00aaff);box-shadow:0 2px 10px #00a8ff44}
 .xmodal-status{font-size:11px;color:#00a8ff;align-self:center;margin-right:auto}
+
+/* ── ANNOTATIONS ── */
+.annot-swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .1s,border-color .15s;flex-shrink:0}
+.annot-swatch:hover{transform:scale(1.15)}
+.annot-swatch.sel{border-color:#fff;box-shadow:0 0 6px #fff8}
+#label-input-wrap{position:fixed;z-index:600;display:none;pointer-events:auto}
+#label-input{background:rgba(7,20,34,0.92);border:1.5px solid #00a8ff;border-radius:7px;color:#fff;font-size:13px;font-weight:700;padding:5px 11px;outline:none;min-width:130px;max-width:280px;backdrop-filter:blur(6px);font-family:inherit;box-shadow:0 4px 18px rgba(0,0,0,.6)}
+#label-input::placeholder{color:#3a6a8a}
 </style>
 </head>
 <body>
@@ -261,6 +269,32 @@ input[type=range]{width:100%;accent-color:#00a8ff}
           <svg class="move-icon" viewBox="0 0 34 14"><text x="5" y="12" font-size="13" fill="#ff6666">✕</text></svg>
           Delete Player
         </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec">Annotations</div>
+      <div class="move-types">
+        <button class="move-btn" data-m="label" onclick="setMode('label')">
+          <svg class="move-icon" viewBox="0 0 34 14"><text x="3" y="12" font-size="13" font-weight="bold" fill="#ffcc00" font-family="sans-serif">A</text><line x1="14" y1="7" x2="31" y2="7" stroke="#ffcc00" stroke-width="1.5" stroke-dasharray="2,2"/></svg>
+          Text Label
+        </button>
+        <button class="move-btn" data-m="zone-rect" onclick="setMode('zone-rect')">
+          <svg class="move-icon" viewBox="0 0 34 14"><rect x="4" y="3" width="26" height="8" rx="1.5" stroke="#44aaff" stroke-width="1.8" fill="rgba(68,170,255,0.22)" stroke-dasharray="4,2.5"/></svg>
+          Zone Rectangle
+        </button>
+        <button class="move-btn" data-m="zone-circle" onclick="setMode('zone-circle')">
+          <svg class="move-icon" viewBox="0 0 34 14"><ellipse cx="17" cy="7" rx="13" ry="5" stroke="#44aaff" stroke-width="1.8" fill="rgba(68,170,255,0.22)" stroke-dasharray="4,2.5"/></svg>
+          Zone Ellipse
+        </button>
+        <button class="move-btn" data-m="delAnnot" onclick="setMode('delAnnot')">
+          <svg class="move-icon" viewBox="0 0 34 14"><rect x="4" y="3" width="18" height="8" rx="1.5" stroke="#ff6666" stroke-width="1.5" fill="rgba(255,100,100,0.15)" stroke-dasharray="3,2"/><text x="24" y="12" font-size="12" fill="#ff6666" font-family="sans-serif">✕</text></svg>
+          Delete Annot.
+        </button>
+      </div>
+      <div style="margin-top:8px">
+        <div style="font-size:10px;color:#4a7a9a;margin-bottom:5px;text-transform:uppercase;font-weight:700;letter-spacing:1px">Zone / Label Color</div>
+        <div id="annot-colors" style="display:flex;gap:5px;flex-wrap:wrap"></div>
       </div>
     </div>
 
@@ -381,6 +415,13 @@ let iceType = 'full';      // kept as alias: 'half' only for hockey/ringette hal
 let mode = 'select';
 let players = [];
 let moves = [];
+let labels = [];
+let zones = [];
+let drawingZoneStart = null;
+let zonePreviewEnd = null;
+let pendingLabelPos = null;
+const ANNOT_COLORS = ['#ff4444','#4499ff','#ffcc00','#00dd66','#ff9922','#cc66ff','#ffffff','#ff77bb'];
+let annotColor = ANNOT_COLORS[0];
 let customPositions = [];
 let selectedId = null;
 let animPlaying = false;
@@ -412,6 +453,7 @@ function init(){
   ctx = canvas.getContext('2d');
   buildGrid();
   buildPalette();
+  buildAnnotColors();
   buildActBar();
   resize();
   window.addEventListener('resize', resize);
@@ -422,7 +464,7 @@ function init(){
   canvas.addEventListener('contextmenu', e=>{e.preventDefault();cancelDraw();});
   document.addEventListener('mousemove', onGMove);
   document.addEventListener('mouseup', onGUp);
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') cancelDraw(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ cancelDraw(); hideLabelInput(); } });
   render();
 }
 
@@ -1567,6 +1609,139 @@ function animLoop(ts){
 // ─────────────────────────────────────────────
 // RENDER
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// ZONES & LABELS
+// ─────────────────────────────────────────────
+function visAnnots(arr){ return arr.filter(a=>!a.actId||a.actId===currentActId); }
+
+function drawZones(){
+  visAnnots(zones).forEach(z=>{
+    ctx.save();
+    if(z.type==='rect'){
+      const p1=r2c(z.x,z.y), p2=r2c(z.x+z.w,z.y+z.h);
+      const x=Math.min(p1.x,p2.x), y=Math.min(p1.y,p2.y), w=Math.abs(p2.x-p1.x), h=Math.abs(p2.y-p1.y);
+      ctx.globalAlpha=0.20; ctx.fillStyle=z.color; ctx.fillRect(x,y,w,h);
+      ctx.globalAlpha=0.80; ctx.strokeStyle=z.color; ctx.lineWidth=Math.max(1.5,sx(0.5));
+      ctx.setLineDash([sx(3.5),sx(2)]); ctx.strokeRect(x,y,w,h); ctx.setLineDash([]);
+    } else if(z.type==='circle'){
+      const c=r2c(z.cx,z.cy);
+      const rx=Math.abs(z.rx/getFieldW()*CW), ry=Math.abs(z.ry/getFieldH()*CH);
+      if(rx<2&&ry<2){ctx.restore();return;}
+      ctx.globalAlpha=0.20; ctx.fillStyle=z.color;
+      ctx.beginPath(); ctx.ellipse(c.x,c.y,rx,ry,0,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=0.80; ctx.strokeStyle=z.color; ctx.lineWidth=Math.max(1.5,sx(0.5));
+      ctx.setLineDash([sx(3.5),sx(2)]);
+      ctx.beginPath(); ctx.ellipse(c.x,c.y,rx,ry,0,0,Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+  });
+}
+
+function drawZonePreview(){
+  if(!drawingZoneStart||!zonePreviewEnd) return;
+  ctx.save();
+  ctx.strokeStyle=annotColor; ctx.lineWidth=Math.max(1.5,sx(0.5));
+  ctx.setLineDash([sx(3.5),sx(2)]);
+  if(mode==='zone-rect'){
+    const p1=r2c(drawingZoneStart.rx,drawingZoneStart.ry);
+    const p2=r2c(zonePreviewEnd.rx,zonePreviewEnd.ry);
+    const x=Math.min(p1.x,p2.x),y=Math.min(p1.y,p2.y),w=Math.abs(p2.x-p1.x),h=Math.abs(p2.y-p1.y);
+    ctx.globalAlpha=0.16; ctx.fillStyle=annotColor; ctx.fillRect(x,y,w,h);
+    ctx.globalAlpha=0.75; ctx.strokeRect(x,y,w,h);
+  } else if(mode==='zone-circle'){
+    const c=r2c(drawingZoneStart.rx,drawingZoneStart.ry);
+    const e=r2c(zonePreviewEnd.rx,zonePreviewEnd.ry);
+    const rx=Math.abs(e.x-c.x), ry=Math.abs(e.y-c.y);
+    if(rx>3||ry>3){
+      ctx.globalAlpha=0.16; ctx.fillStyle=annotColor;
+      ctx.beginPath(); ctx.ellipse(c.x,c.y,rx,ry,0,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=0.75;
+      ctx.beginPath(); ctx.ellipse(c.x,c.y,rx,ry,0,0,Math.PI*2); ctx.stroke();
+    }
+  }
+  ctx.setLineDash([]); ctx.restore();
+}
+
+function drawLabels(){
+  visAnnots(labels).forEach(l=>{
+    const pos=r2c(l.x,l.y);
+    const fs=Math.max(10,Math.round(Math.min(CW,CH)/22));
+    ctx.font=`bold ${fs}px sans-serif`;
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    const tw=ctx.measureText(l.text).width;
+    const pad=5, rh=fs+8;
+    // Background pill
+    ctx.fillStyle='rgba(4,12,24,0.72)';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(pos.x-pad,pos.y-rh/2,tw+pad*2,rh,4);
+    else ctx.rect(pos.x-pad,pos.y-rh/2,tw+pad*2,rh);
+    ctx.fill();
+    // Text shadow then text
+    ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillText(l.text,pos.x+1,pos.y+1);
+    ctx.fillStyle=l.color||'#ffffff'; ctx.fillText(l.text,pos.x,pos.y);
+  });
+}
+
+function findLabelAt(cx,cy){
+  const vis=visAnnots(labels);
+  for(let i=vis.length-1;i>=0;i--){
+    const l=vis[i], lp=r2c(l.x,l.y);
+    if(Math.hypot(cx-lp.x,cy-lp.y)<44) return l;
+  }
+  return null;
+}
+function findZoneAt(cx,cy){
+  const vis=visAnnots(zones);
+  for(let i=vis.length-1;i>=0;i--){
+    const z=vis[i];
+    if(z.type==='rect'){
+      const p1=r2c(z.x,z.y),p2=r2c(z.x+z.w,z.y+z.h);
+      const x=Math.min(p1.x,p2.x),y=Math.min(p1.y,p2.y);
+      if(cx>=x&&cx<=x+Math.abs(p2.x-p1.x)&&cy>=y&&cy<=y+Math.abs(p2.y-p1.y)) return z;
+    } else if(z.type==='circle'){
+      const c=r2c(z.cx,z.cy);
+      const rx=Math.abs(z.rx/getFieldW()*CW),ry=Math.abs(z.ry/getFieldH()*CH);
+      if(rx>0&&ry>0&&((cx-c.x)/rx)**2+((cy-c.y)/ry)**2<=1) return z;
+    }
+  }
+  return null;
+}
+
+function showLabelInput(screenX,screenY,rx,ry){
+  pendingLabelPos={rx,ry};
+  const wrap=document.getElementById('label-input-wrap');
+  const inp=document.getElementById('label-input');
+  wrap.style.left=(screenX-4)+'px'; wrap.style.top=(screenY-16)+'px';
+  wrap.style.display='block';
+  inp.value=''; inp.focus();
+}
+function commitLabel(){
+  if(!pendingLabelPos) return;
+  const text=(document.getElementById('label-input')?.value||'').trim();
+  if(text){
+    pushUndo();
+    labels.push({id:'lbl'+Date.now()+Math.random(),x:pendingLabelPos.rx,y:pendingLabelPos.ry,text,color:annotColor,actId:currentActId});
+    render();
+  }
+  hideLabelInput();
+}
+function hideLabelInput(){
+  document.getElementById('label-input-wrap').style.display='none';
+  pendingLabelPos=null;
+}
+function buildAnnotColors(){
+  const row=document.getElementById('annot-colors'); if(!row) return;
+  row.innerHTML='';
+  ANNOT_COLORS.forEach((c,i)=>{
+    const el=document.createElement('div');
+    el.className='annot-swatch cswatch'+(i===0?' sel':'');
+    el.style.background=c; el.title=c;
+    el.onclick=()=>{ row.querySelectorAll('.annot-swatch').forEach(s=>s.classList.remove('sel')); el.classList.add('sel'); annotColor=c; };
+    row.appendChild(el);
+  });
+}
+
 function render(){
   if(iceType==='half'){
     ctx.save();
@@ -1574,9 +1749,12 @@ function render(){
     ctx.rotate(Math.PI/2);
   }
   drawRink();
+  drawZones();
+  drawZonePreview();
   drawAllMoves();
   drawPreviewMove();
   drawPlayers();
+  drawLabels();
   if(iceType==='half') ctx.restore();
   drawDragToken(); // always in portrait/screen coords
 }
@@ -1637,6 +1815,26 @@ function onCDown(e){
     else { selectedId=null; selInfo(null); }
     render(); return;
   }
+  if(mode==='delAnnot'){
+    const z=findZoneAt(cx,cy);
+    if(z){ pushUndo(); zones=zones.filter(zn=>zn.id!==z.id); render(); return; }
+    const la=findLabelAt(cx,cy);
+    if(la){ pushUndo(); labels=labels.filter(lb=>lb.id!==la.id); render(); return; }
+    return;
+  }
+  if(mode==='label'){
+    const rp=c2r(cx,cy);
+    const rect=canvas.getBoundingClientRect();
+    const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+    showLabelInput(sx,sy,rp.x,rp.y);
+    return;
+  }
+  if(mode==='zone-rect'||mode==='zone-circle'){
+    const rp=c2r(cx,cy);
+    drawingZoneStart={rx:rp.x,ry:rp.y};
+    zonePreviewEnd=null;
+    return;
+  }
   // Draw modes
   if(p){
     selectedId=p.id; isDrawing=true;
@@ -1665,6 +1863,11 @@ function onCMove(e){
     const last=currentWaypoints[currentWaypoints.length-1];
     const dx=rp.x-last.x,dy=rp.y-last.y;
     if(dx*dx+dy*dy>0.7) currentWaypoints.push({x:clampX(rp.x),y:clamp(rp.y,2,R.H-2)});
+    render(); return;
+  }
+  if((mode==='zone-rect'||mode==='zone-circle')&&drawingZoneStart){
+    const rp=c2r(cx,cy);
+    zonePreviewEnd={rx:rp.x,ry:rp.y};
     render();
   }
 }
@@ -1685,7 +1888,23 @@ function finishDraw(){
   isDrawing=false; currentWaypoints=[]; drawingMove=null;
 }
 
-function onCUp(e){ if(dragPlayer){dragPlayer=null;return;} finishDraw(); render(); }
+function onCUp(e){
+  if(dragPlayer){dragPlayer=null;render();return;}
+  if((mode==='zone-rect'||mode==='zone-circle')&&drawingZoneStart&&zonePreviewEnd){
+    const s=drawingZoneStart,en=zonePreviewEnd;
+    const dx=Math.abs(en.rx-s.rx),dy=Math.abs(en.ry-s.ry);
+    if(dx>0.5||dy>0.5){
+      pushUndo();
+      if(mode==='zone-rect'){
+        zones.push({id:'z'+Date.now()+Math.random(),type:'rect',x:Math.min(s.rx,en.rx),y:Math.min(s.ry,en.ry),w:Math.abs(en.rx-s.rx),h:Math.abs(en.ry-s.ry),color:annotColor,actId:currentActId});
+      } else {
+        zones.push({id:'z'+Date.now()+Math.random(),type:'circle',cx:s.rx,cy:s.ry,rx:Math.abs(en.rx-s.rx),ry:Math.abs(en.ry-s.ry),color:annotColor,actId:currentActId});
+      }
+    }
+    drawingZoneStart=null; zonePreviewEnd=null; render(); return;
+  }
+  finishDraw(); render();
+}
 function onCLeave(){ dragPlayer=null; finishDraw(); render(); }
 function cancelDraw(){ isDrawing=false; currentWaypoints=[]; drawingMove=null; selectedId=null; selInfo(null); render(); }
 
@@ -1768,6 +1987,8 @@ function deleteAct(id){
   pushUndo();
   const idx=acts.findIndex(a=>a.id===id);
   moves=moves.filter(m=>(m.actId||acts[0].id)!==id);
+  labels=labels.filter(l=>l.actId!==id);
+  zones=zones.filter(z=>z.actId!==id);
   acts.splice(idx,1);
   // Relabel acts sequentially
   acts.forEach((a,i)=>a.label='Act '+(i+1));
@@ -1785,14 +2006,19 @@ let undoStack = [], redoStack = [];
 function captureState(){
   return JSON.stringify({
     players: players.map(p=>({...p})),
-    moves: moves.map(m=>({...m, waypoints: m.waypoints.map(w=>({...w}))}))
+    moves: moves.map(m=>({...m, waypoints: m.waypoints.map(w=>({...w}))})),
+    labels: labels.map(l=>({...l})),
+    zones: zones.map(z=>({...z}))
   });
 }
 function applyState(json){
   const s = JSON.parse(json);
   players = s.players;
   moves = s.moves;
+  labels = s.labels || [];
+  zones = s.zones || [];
   selectedId = null; isDrawing = false; currentWaypoints = []; drawingMove = null;
+  drawingZoneStart = null; zonePreviewEnd = null;
   buildGrid(); render(); updateUndoUI();
 }
 function pushUndo(){
@@ -1966,17 +2192,20 @@ function setIce(type){ setSport(sport, type); }
 function setMode(m){
   mode=m; drawingMove=null; isDrawing=false; currentWaypoints=[];
   document.querySelectorAll('.move-btn').forEach(b=>b.classList.toggle('active',b.dataset.m===m));
-  const tips={select:'Click to select & drag players.',skate:'Click &amp; drag a player to draw a skate path.',skatePuck:'Click &amp; drag a player to draw a skate-with-puck path.',pass:'Click &amp; drag a player to draw a pass.',shot:'Click &amp; drag a player to draw a shot.',delMove:'Click any move line to delete it.',del:'Click a player to remove them from the ice.'};
+  const tips={select:'Click to select & drag players.',skate:'Click &amp; drag a player to draw a skate path.',skatePuck:'Click &amp; drag a player to draw a skate-with-puck path.',pass:'Click &amp; drag a player to draw a pass.',shot:'Click &amp; drag a player to draw a shot.',delMove:'Click any move line to delete it.',del:'Click a player to remove them from the ice.',label:'Click anywhere on the field to place a text label.','zone-rect':'Click & drag to draw a rectangular zone.','zone-circle':'Click & drag to draw an ellipse zone.',delAnnot:'Click any zone or label to delete it.'};
+  if(m==='label'||m==='zone-rect'||m==='zone-circle'||m==='delAnnot'){
+    drawingZoneStart=null; zonePreviewEnd=null; hideLabelInput();
+  }
   tip(tips[m]||'');
 }
 function modeLabel(m){return{skate:'Skate',skatePuck:'Skate w/Puck',pass:'Pass',shot:'Shot'}[m]||m;}
 function setSpeed(v){ animSpeed=parseFloat(v); document.getElementById('speedLbl').textContent=parseFloat(v).toFixed(2).replace(/\.?0+$/,'')+'x'; }
-function resetAll(){ pushUndo(); players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); buildGrid(); tip('Board cleared.'); render(); }
+function resetAll(){ pushUndo(); players=[]; moves=[]; labels=[]; zones=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; drawingZoneStart=null; zonePreviewEnd=null; stopAnim(); resetActs(); buildGrid(); tip('Board cleared.'); render(); }
 function clearMoves(){ pushUndo(); moves=[]; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); tip('All moves cleared.'); render(); }
 function tip(t){ document.getElementById('tipbar').textContent=t; }
 
 function saveDrill(){
-  const data={version:1,iceType,acts,players,moves};
+  const data={version:1,iceType,acts,players,moves,labels,zones};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -1992,7 +2221,7 @@ function loadDrill(input){
     try{
       const data=JSON.parse(e.target.result);
       if(!data.version||!data.players||!data.moves) throw new Error('Invalid file');
-      players=data.players; moves=data.moves; acts=data.acts||[{id:'act1',label:'Act 1'}];
+      players=data.players; moves=data.moves; labels=data.labels||[]; zones=data.zones||[]; acts=data.acts||[{id:'act1',label:'Act 1'}];
       iceType=data.iceType||'full'; currentActId=acts[0].id;
       selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null;
       document.querySelectorAll('.ice-btn').forEach((b,i)=>b.classList.toggle('active',(iceType==='full'&&i===0)||(iceType==='half'&&i===1)));
@@ -2024,6 +2253,13 @@ document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElement
 
 init();
 </script>
+<!-- Inline label text input -->
+<div id="label-input-wrap">
+  <input id="label-input" type="text" placeholder="Type label, Enter to place…" autocomplete="off" spellcheck="false"
+    onkeydown="if(event.key==='Enter'){event.preventDefault();commitLabel();}else if(event.key==='Escape')hideLabelInput();"
+    onblur="setTimeout(()=>{if(document.activeElement&&document.activeElement.id!=='label-input')commitLabel();},150);" />
+</div>
+
 <!-- Export Modal -->
 <div class="xmodal-overlay" id="export-modal">
   <div class="xmodal-box">
