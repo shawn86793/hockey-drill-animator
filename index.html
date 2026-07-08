@@ -13,9 +13,18 @@ body{background:#060d16;color:#fff;font-family:'Segoe UI',sans-serif;height:100v
 #title{font-size:18px;font-weight:800;letter-spacing:1px;background:linear-gradient(90deg,#fff 40%,#00a8ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .subtitle{font-size:10px;color:#4a7fa0;letter-spacing:2px;text-transform:uppercase}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.ice-toggle{display:flex;background:#071422;border:1px solid #1a4a6a;border-radius:20px;overflow:hidden}
-.ice-btn{padding:6px 18px;cursor:pointer;font-size:12px;font-weight:600;color:#5a8aaa;border:none;background:transparent;transition:all .2s}
-.ice-btn.active{background:linear-gradient(135deg,#0066cc,#00a8ff);color:#fff}
+.sport-select{position:relative;margin-left:16px;align-self:center}
+.sport-sel-btn{display:flex;align-items:center;gap:8px;padding:7px 14px;background:#071422;border:1px solid #1a4a6a;border-radius:20px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap}
+.sport-sel-btn:hover{border-color:#00a8ff;background:#0d2035}
+.sport-sel-btn svg{flex-shrink:0;transition:transform .2s}
+.sport-sel-btn.open svg{transform:rotate(180deg)}
+.sport-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:#071422;border:1px solid #1a4a6a;border-radius:10px;min-width:190px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,.5);overflow:hidden}
+.sport-menu.open{display:block}
+.sport-menu-item{padding:7px 16px;font-size:12px;font-weight:600;color:#5a8aaa;cursor:pointer;transition:background .15s;white-space:nowrap}
+.sport-menu-item:hover,.sport-menu-item.active{background:#0d2035;color:#fff}
+.sport-menu-group{padding:6px 16px 3px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#00a8ff;border-top:1px solid #0d2035;margin-top:2px}
+.sport-menu-group:first-child{border-top:none;margin-top:0}
+.sport-menu-sep{height:1px;background:#0d2035;margin:4px 0}
 
 /* ── LAYOUT ── */
 #main{display:flex;flex:1;overflow:hidden;min-height:0}
@@ -133,9 +142,28 @@ input[type=range]{width:100%;accent-color:#00a8ff}
     <div id="title">TryoutHQ Design Animator</div>
     <div class="subtitle">Athlete Assessment Systems</div>
   </div>
-  <div class="ice-toggle" style="margin-left:16px;align-self:center">
-    <button class="ice-btn active" onclick="setIce('full')">Full Ice</button>
-    <button class="ice-btn" onclick="setIce('half')">Half Ice</button>
+  <div class="sport-select" id="sport-select">
+    <button class="sport-sel-btn" id="sport-sel-btn" onclick="toggleSportMenu()">
+      <span id="sport-label">Hockey — Full Ice</span>
+      <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </button>
+    <div class="sport-menu" id="sport-menu">
+      <div class="sport-menu-group">Hockey</div>
+      <div class="sport-menu-item active" onclick="setSport('hockey','full')">Full Ice</div>
+      <div class="sport-menu-item" onclick="setSport('hockey','half')">Half Ice</div>
+      <div class="sport-menu-group">Ringette</div>
+      <div class="sport-menu-item" onclick="setSport('ringette','full')">Full Ice</div>
+      <div class="sport-menu-item" onclick="setSport('ringette','half')">Half Ice</div>
+      <div class="sport-menu-group">Basketball</div>
+      <div class="sport-menu-item" onclick="setSport('basketball','full')">Full Court</div>
+      <div class="sport-menu-item" onclick="setSport('basketball','half')">Half Court</div>
+      <div class="sport-menu-sep"></div>
+      <div class="sport-menu-item" onclick="setSport('football','full')">Football</div>
+      <div class="sport-menu-item" onclick="setSport('volleyball','full')">Volleyball</div>
+      <div class="sport-menu-item" onclick="setSport('rugby','full')">Rugby</div>
+      <div class="sport-menu-item" onclick="setSport('baseball','full')">Baseball</div>
+      <div class="sport-menu-item" onclick="setSport('fieldhockey','full')">Field Hockey</div>
+    </div>
   </div>
 </div>
 
@@ -279,10 +307,31 @@ const R = {
   netW:6, netD:4,
 };
 
+// Field dimensions (in feet) for each sport
+const FIELDS = {
+  hockey:      {W:200,  H:85},
+  ringette:    {W:200,  H:85},
+  football:    {W:360,  H:160},  // 120yd × 53.3yd incl end zones
+  basketball:  {W:94,   H:50},   // NBA full court
+  volleyball:  {W:59,   H:30},   // 18m × 9m
+  rugby:       {W:394,  H:230},  // 120m × 70m in feet
+  baseball:    {W:420,  H:380},  // wide enough for foul lines + outfield
+  fieldhockey: {W:300,  H:180},  // 100yd × 60yd
+};
+function getFieldW(){
+  if(iceType==='half') return halfW(); // hockey/ringette portrait
+  if(sport==='basketball'&&surfaceType==='half') return 47;
+  if(sport==='fieldhockey'&&surfaceType==='half') return 150;
+  return FIELDS[sport]?.W||200;
+}
+function getFieldH(){ return FIELDS[sport]?.H||85; }
+
 // ─────────────────────────────────────────────
 // STATE
 // ─────────────────────────────────────────────
-let iceType = 'full';
+let sport = 'hockey';      // active sport
+let surfaceType = 'full';  // 'full' or 'half'
+let iceType = 'full';      // kept as alias: 'half' only for hockey/ringette half-ice portrait
 let mode = 'select';
 let players = [];
 let moves = [];
@@ -399,15 +448,15 @@ function removeLastPlayer(base){
 function addPlayerCenter(pos){
   const label = getLabel(pos.base);
   const id = 'p'+Date.now()+Math.random();
-  const rW = iceType==='full'?R.W:R.W/2;
+  const fw=getFieldW(), fh=getFieldH();
   // Random scatter around center so they don't all stack
   const n = countOnIce(pos.base);
   const angle = (n * 2.39996) * Math.PI; // golden angle spread
-  const dist = 8 + n * 4;
+  const dist = fw*0.05 + n * fw*0.025;
   players.push({
     id, base:pos.base, label, color:pos.color,
-    x: clampX(rW/2 + Math.cos(angle)*dist),
-    y: clamp(R.H/2 + Math.sin(angle)*dist, 3, R.H-3)
+    x: clampX(fw/2 + Math.cos(angle)*dist),
+    y: clamp(fh/2 + Math.sin(angle)*dist, fh*0.03, fh*0.97)
   });
   selectedId = id;
   selInfo(players[players.length-1]);
@@ -434,16 +483,23 @@ function buildPalette(){
 function resize(){
   const section = document.getElementById('rink-section');
   const aw = section.clientWidth-8, ah = section.clientHeight-8;
-  if(iceType==='full'){
+  if(iceType==='half'){
+    // Hockey/ringette portrait half-ice
+    const scale = Math.min(aw/R.H, ah/halfW()) * 1.38;
+    CW = Math.round(halfW()*scale);
+    CH = Math.round(R.H*scale);
+    canvas.width=CH; canvas.height=CW;
+  } else if(sport==='hockey'||sport==='ringette'){
+    // Full ice landscape with board margin
     const scale = Math.min(aw/(R.W*1.25), ah/(R.H*1.5));
     CW = Math.round(R.W*scale*1.25); CH = Math.round(R.H*scale*1.5);
     canvas.width=CW; canvas.height=CH;
   } else {
-    // Portrait half ice: 38% larger than fit; rink-section scrolls the overflow
-    const scale = Math.min(aw/R.H, ah/halfW()) * 1.38;
-    CW = Math.round(halfW()*scale); // landscape drawing width (long axis, 125ft)
-    CH = Math.round(R.H*scale);     // landscape drawing height (short axis, 85ft)
-    canvas.width=CH; canvas.height=CW; // portrait canvas: swap dims
+    // All other sports: fit field to section with small margin
+    const fw=getFieldW(), fh=getFieldH();
+    const scale = Math.min(aw/fw, ah/fh) * 0.96;
+    CW = Math.round(fw*scale); CH = Math.round(fh*scale);
+    canvas.width=CW; canvas.height=CH;
   }
   render();
 }
@@ -451,11 +507,11 @@ function resize(){
 function circR(r){ return (sx(r)+sy(r))/2; }
 
 function halfW(){ return R.W-R.blueLineX; } // 125ft: goal to far blue line
-function r2c(rx,ry){ const rW=iceType==='full'?R.W:halfW(); return{x:rx/rW*CW,y:ry/R.H*CH}; }
-function c2r(cx,cy){ const rW=iceType==='full'?R.W:halfW(); return{x:cx/CW*rW,y:cy/CH*R.H}; }
-function sx(d){ const rW=iceType==='full'?R.W:halfW(); return d/rW*CW; }
-function sy(d){ return d/R.H*CH; }
-function clampX(x){ return Math.max(0,Math.min(iceType==='full'?R.W:halfW(),x)); }
+function r2c(rx,ry){ return{x:rx/getFieldW()*CW, y:ry/getFieldH()*CH}; }
+function c2r(cx,cy){ return{x:cx/CW*getFieldW(), y:cy/CH*getFieldH()}; }
+function sx(d){ return d/getFieldW()*CW; }
+function sy(d){ return d/getFieldH()*CH; }
+function clampX(x){ return Math.max(0,Math.min(getFieldW(),x)); }
 function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
 
 // ─────────────────────────────────────────────
@@ -466,6 +522,14 @@ function getBOARD(){ return Math.max(8, Math.round(Math.min(CW,CH)*0.028)); }
 
 function drawRink(){
   ctx.clearRect(0,0,CW,CH);
+  if(sport==='ringette')   { drawRingetteField(); return; }
+  if(sport==='football')   { drawFootballField(); return; }
+  if(sport==='basketball') { drawBasketballField(); return; }
+  if(sport==='volleyball') { drawVolleyballField(); return; }
+  if(sport==='rugby')      { drawRugbyField(); return; }
+  if(sport==='baseball')   { drawBaseballField(); return; }
+  if(sport==='fieldhockey'){ drawFieldHockeyField(); return; }
+  // Default: hockey
   const B = getBOARD();
   const cr = sx(R.cornerR);
 
@@ -731,6 +795,363 @@ function drawNet(gx,gy,dir){
     const my=gy-hw+(hw*2)*i/3;
     ctx.beginPath(); ctx.moveTo(gx,my); ctx.lineTo(bx,my); ctx.stroke();
   }
+}
+
+// ─────────────────────────────────────────────
+// SPORT FIELD DRAWING FUNCTIONS
+// ─────────────────────────────────────────────
+function drawRingetteField(){
+  const B=getBOARD(), cr=sx(R.cornerR);
+  if(iceType==='half'){
+    ctx.fillStyle='#111'; halfBoardPath(cr,B); ctx.fill();
+    halfIcePath(B,cr); ctx.fillStyle='#e8f4fd'; ctx.fill();
+    ctx.save(); halfIcePath(B,cr); ctx.clip();
+    drawRingetteMarkings('half',B); ctx.restore();
+    ctx.strokeStyle='#000'; ctx.lineWidth=1.5; halfIcePath(B,cr); ctx.stroke();
+  } else {
+    ctx.fillStyle='#111'; rrect(0,0,CW,CH,cr+B*0.5); ctx.fill();
+    rrect(B,B,CW-B*2,CH-B*2,cr); ctx.fillStyle='#e8f4fd'; ctx.fill();
+    ctx.save(); rrect(B,B,CW-B*2,CH-B*2,cr); ctx.clip();
+    drawRingetteMarkings('full',B); ctx.restore();
+    rrect(B,B,CW-B*2,CH-B*2,cr); ctx.strokeStyle='#000'; ctx.lineWidth=1.5; ctx.stroke();
+  }
+}
+function drawRingetteMarkings(mode, B){
+  ctx.setLineDash([]);
+  const glL=sx(R.goalLineX), glR=sx(R.W-R.goalLineX);
+  const blL=sx(R.blueLineX), blR=sx(R.W-R.blueLineX);
+  const cx2=CW/2, cy=CH/2;
+  const LW=Math.max(1.1,sx(1.5)*0.75), BLW=Math.max(1.4,sx(2.1)*0.75);
+  const clW=Math.max(3,sx(1.8));
+  const redLine=(x)=>{
+    ctx.fillStyle='#cc0000'; ctx.fillRect(x-clW/2,B,clW,CH-B*2);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=clW*0.65;
+    ctx.setLineDash([sy(4.5),sy(3.5)]);
+    ctx.beginPath(); ctx.moveTo(x,B); ctx.lineTo(x,CH-B); ctx.stroke();
+    ctx.setLineDash([]);
+  };
+  const rcrease=(gx,gy,dir)=>{
+    const rCR=sx(15);
+    ctx.strokeStyle='#cc0000'; ctx.lineWidth=LW;
+    ctx.beginPath();
+    if(dir===1) ctx.arc(gx,gy,rCR,-Math.PI/2,Math.PI/2);
+    else ctx.arc(gx,gy,rCR,Math.PI/2,-Math.PI/2);
+    ctx.stroke();
+  };
+  if(mode==='full'){
+    vline(glL,'#cc0000',LW,B); vline(glR,'#cc0000',LW,B);
+    vline(blL,'#1a4ab0',BLW,B); vline(blR,'#1a4ab0',BLW,B);
+    redLine(cx2);
+    circle(cx2,cy,circR(R.circleR),'#1a4ab0',LW);
+    dot(cx2,cy,circR(1.3),'#cc0000');
+    rcrease(glL,cy,1); drawCrease(glL,cy,1); drawNet(glL,cy,1);
+    rcrease(glR,cy,-1); drawCrease(glR,cy,-1); drawNet(glR,cy,-1);
+  } else {
+    vline(glL,'#cc0000',LW,B);
+    vline(blL,'#1a4ab0',BLW,B);
+    vline(CW,'#1a4ab0',BLW,B);
+    const cx2h=sx(R.W/2);
+    redLine(cx2h);
+    circle(cx2h,cy,circR(R.circleR),'#1a4ab0',LW);
+    dot(cx2h,cy,circR(1.3),'#cc0000');
+    rcrease(glL,cy,1); drawCrease(glL,cy,1); drawNet(glL,cy,1);
+  }
+}
+
+function drawFootballField(){
+  const W=FIELDS.football.W, H=FIELDS.football.H;
+  ctx.fillStyle='#2d7a2d'; ctx.fillRect(0,0,CW,CH);
+  for(let i=0;i<10;i++){
+    if(i%2===0){ ctx.fillStyle='rgba(255,255,255,0.05)'; ctx.fillRect(sx(30+i*30),0,sx(30),CH); }
+  }
+  ctx.fillStyle='#1e5c1e';
+  ctx.fillRect(0,0,sx(30),CH); ctx.fillRect(CW-sx(30),0,sx(30),CH);
+  const LW=Math.max(1.5,sx(1.2)), sp=sy(5);
+  // Sidelines
+  ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
+  ctx.beginPath(); ctx.moveTo(sx(30),sp); ctx.lineTo(CW-sx(30),sp); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sx(30),CH-sp); ctx.lineTo(CW-sx(30),CH-sp); ctx.stroke();
+  // End zone back lines
+  ctx.beginPath(); ctx.moveTo(0,sp); ctx.lineTo(0,CH-sp); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CW,sp); ctx.lineTo(CW,CH-sp); ctx.stroke();
+  // Goal lines
+  ctx.lineWidth=LW*2;
+  ctx.beginPath(); ctx.moveTo(sx(30),sp); ctx.lineTo(sx(30),CH-sp); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CW-sx(30),sp); ctx.lineTo(CW-sx(30),CH-sp); ctx.stroke();
+  // Midfield
+  ctx.beginPath(); ctx.moveTo(sx(180),sp); ctx.lineTo(sx(180),CH-sp); ctx.stroke();
+  // 10-yard lines
+  ctx.lineWidth=LW;
+  for(let yd=10;yd<300;yd+=10){
+    if(yd===150) continue; // midfield already drawn
+    const x=sx(30+yd);
+    ctx.beginPath(); ctx.moveTo(x,sp); ctx.lineTo(x,sp+sy(6)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,CH-sp-sy(6)); ctx.lineTo(x,CH-sp); ctx.stroke();
+  }
+  // 5-yard minor ticks
+  ctx.lineWidth=LW*0.6;
+  for(let yd=5;yd<300;yd+=10){
+    const x=sx(30+yd);
+    ctx.beginPath(); ctx.moveTo(x,sp); ctx.lineTo(x,sp+sy(3)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,CH-sp-sy(3)); ctx.lineTo(x,CH-sp); ctx.stroke();
+  }
+  // Hash marks (every yard, at 40ft from sideline = college-style)
+  ctx.lineWidth=LW*0.5;
+  const h1=sy(40), h2=CH-sy(40);
+  for(let yd=1;yd<300;yd++){
+    const x=sx(30+yd), hl=sy(1.5);
+    ctx.beginPath(); ctx.moveTo(x,h1); ctx.lineTo(x,h1+hl); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x,h2-hl); ctx.lineTo(x,h2); ctx.stroke();
+  }
+  // Yard labels
+  ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.textAlign='center'; ctx.textBaseline='top';
+  const fs=Math.max(8,Math.round(Math.min(sy(8),sx(12))));
+  ctx.font=`bold ${fs}px sans-serif`;
+  for(let yd=10;yd<=290;yd+=10){
+    const x=sx(30+yd), label=yd<=150?yd:300-yd;
+    ctx.fillText(label+'',x,sp+sy(8));
+  }
+  // Goal posts (gold H-shape at each back end line)
+  const gpW=sx(18.5), gpH=sy(10), gpUp=sy(22);
+  ctx.strokeStyle='#FFD700'; ctx.lineWidth=Math.max(2,sx(1.5));
+  for(const gpX of [0,CW]){
+    const cy2=CH/2;
+    ctx.beginPath(); ctx.moveTo(gpX,cy2+gpH*0.5); ctx.lineTo(gpX,cy2-gpUp); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gpX-gpW/2,cy2); ctx.lineTo(gpX+gpW/2,cy2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gpX-gpW/2,cy2); ctx.lineTo(gpX-gpW/2,cy2-gpUp); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gpX+gpW/2,cy2); ctx.lineTo(gpX+gpW/2,cy2-gpUp); ctx.stroke();
+  }
+}
+
+function drawBasketballField(){
+  ctx.fillStyle='#c8832a'; ctx.fillRect(0,0,CW,CH);
+  ctx.strokeStyle='rgba(0,0,0,0.10)'; ctx.lineWidth=0.7;
+  for(let i=1;i<20;i++){ const y=CH*i/20; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(CW,y); ctx.stroke(); }
+  const LW=Math.max(1.5,Math.min(sx(1.5),sy(1.5)));
+  const pad=Math.min(sx(3),sy(3));
+  ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
+  ctx.strokeRect(pad,pad,CW-pad*2,CH-pad*2);
+  const cy2=CH/2;
+  function drawEnd(endX,dir){
+    const bx=endX+dir*sx(5.25);
+    const ftX=endX+dir*sx(19);
+    const laneHW=sy(8);
+    ctx.fillStyle='rgba(180,60,60,0.28)';
+    ctx.fillRect(Math.min(endX,ftX),cy2-laneHW,Math.abs(ftX-endX),laneHW*2);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
+    ctx.strokeRect(Math.min(endX,ftX),cy2-laneHW,Math.abs(ftX-endX),laneHW*2);
+    const ftR=sy(6);
+    // FT circle solid half (faces basket)
+    ctx.beginPath();
+    if(dir>0) ctx.arc(ftX,cy2,ftR,Math.PI/2,3*Math.PI/2,false);
+    else ctx.arc(ftX,cy2,ftR,-Math.PI/2,Math.PI/2,false);
+    ctx.stroke();
+    // FT circle dashed half (faces center)
+    ctx.setLineDash([sx(2),sx(2)]);
+    ctx.beginPath();
+    if(dir>0) ctx.arc(ftX,cy2,ftR,-Math.PI/2,Math.PI/2,false);
+    else ctx.arc(ftX,cy2,ftR,Math.PI/2,3*Math.PI/2,false);
+    ctx.stroke(); ctx.setLineDash([]);
+    // 3pt arc
+    const arcR=sx(23.75);
+    const baa=Math.atan2(sy(22),sx(8.75));
+    ctx.beginPath();
+    if(dir>0) ctx.arc(bx,cy2,arcR,-baa,baa,false);
+    else ctx.arc(bx,cy2,arcR,Math.PI-baa,Math.PI+baa,false);
+    ctx.stroke();
+    // Corner 3pt lines (14ft from baseline)
+    ctx.beginPath(); ctx.moveTo(endX,cy2-sy(22)); ctx.lineTo(endX+dir*sx(14),cy2-sy(22)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(endX,cy2+sy(22)); ctx.lineTo(endX+dir*sx(14),cy2+sy(22)); ctx.stroke();
+    // Restricted arc (4ft)
+    ctx.beginPath();
+    if(dir>0) ctx.arc(bx,cy2,sx(4),-Math.PI/2,Math.PI/2,false);
+    else ctx.arc(bx,cy2,sx(4),Math.PI/2,3*Math.PI/2,false);
+    ctx.stroke();
+    // Rim (orange)
+    ctx.strokeStyle='#FF6600'; ctx.lineWidth=Math.max(2,LW);
+    ctx.beginPath(); ctx.arc(bx,cy2,sx(1.5),0,Math.PI*2); ctx.stroke();
+    // Backboard
+    ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
+    ctx.beginPath(); ctx.moveTo(endX,cy2-sy(3)); ctx.lineTo(endX,cy2+sy(3)); ctx.stroke();
+  }
+  if(surfaceType==='half'){
+    drawEnd(CW-pad,-1);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
+    ctx.beginPath(); ctx.moveTo(pad,pad); ctx.lineTo(pad,CH-pad); ctx.stroke();
+    // Half-court arc (center circle half)
+    ctx.beginPath(); ctx.arc(pad,cy2,sx(6),-Math.PI/2,Math.PI/2,false); ctx.stroke();
+  } else {
+    drawEnd(pad,1); drawEnd(CW-pad,-1);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
+    ctx.beginPath(); ctx.moveTo(CW/2,pad); ctx.lineTo(CW/2,CH-pad); ctx.stroke();
+    circle(CW/2,cy2,sx(6),'#fff',LW);
+    dot(CW/2,cy2,sx(1),'#fff');
+  }
+}
+
+function drawVolleyballField(){
+  ctx.fillStyle='#c8b97a'; ctx.fillRect(0,0,CW,CH);
+  const LW=Math.max(1.5,sx(1.2));
+  const pad=Math.min(sx(4),sy(4));
+  ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
+  // Court boundary
+  ctx.strokeRect(pad,pad,CW-pad*2,CH-pad*2);
+  // Net (center line, thicker)
+  ctx.lineWidth=LW*2;
+  ctx.beginPath(); ctx.moveTo(CW/2,pad); ctx.lineTo(CW/2,CH-pad); ctx.stroke();
+  // Attack lines (3m = ~10ft from net each side)
+  ctx.lineWidth=LW;
+  const att=sx(10);
+  ctx.beginPath(); ctx.moveTo(CW/2-att,pad); ctx.lineTo(CW/2-att,CH-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CW/2+att,pad); ctx.lineTo(CW/2+att,CH-pad); ctx.stroke();
+  // Net post indicators
+  ctx.strokeStyle='#aaa'; ctx.lineWidth=Math.max(2,sx(1));
+  ctx.beginPath(); ctx.moveTo(CW/2,0); ctx.lineTo(CW/2,pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CW/2,CH-pad); ctx.lineTo(CW/2,CH); ctx.stroke();
+}
+
+function drawRugbyField(){
+  ctx.fillStyle='#2d7a2d'; ctx.fillRect(0,0,CW,CH);
+  const inGoal=sx(33);
+  const tryL=inGoal, tryR=CW-inGoal;
+  const half=CW/2;
+  const line22L=inGoal+sx(72), line22R=CW-inGoal-sx(72);
+  // Alternating stripe
+  for(let i=0;i<12;i++){
+    if(i%2===0){ ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.fillRect(inGoal+sx(i*33),0,sx(33),CH); }
+  }
+  // In-goal darker
+  ctx.fillStyle='#1e5c1e';
+  ctx.fillRect(0,0,inGoal,CH); ctx.fillRect(CW-inGoal,0,inGoal,CH);
+  const LW=Math.max(1.5,sx(0.8)), sp=sy(5);
+  // Field boundary
+  ctx.strokeStyle='#fff'; ctx.lineWidth=LW*2;
+  ctx.strokeRect(0,sp,CW,CH-sp*2);
+  // Try lines
+  ctx.beginPath(); ctx.moveTo(tryL,sp); ctx.lineTo(tryL,CH-sp); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tryR,sp); ctx.lineTo(tryR,CH-sp); ctx.stroke();
+  // Halfway
+  ctx.beginPath(); ctx.moveTo(half,sp); ctx.lineTo(half,CH-sp); ctx.stroke();
+  ctx.lineWidth=LW;
+  // 22m lines
+  ctx.beginPath(); ctx.moveTo(line22L,sp); ctx.lineTo(line22L,CH-sp); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(line22R,sp); ctx.lineTo(line22R,CH-sp); ctx.stroke();
+  // 10m lines (dashed)
+  ctx.setLineDash([sx(3),sx(3)]);
+  const line10L=half-sx(33), line10R=half+sx(33);
+  ctx.beginPath(); ctx.moveTo(line10L,sp); ctx.lineTo(line10L,CH-sp); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(line10R,sp); ctx.lineTo(line10R,CH-sp); ctx.stroke();
+  ctx.setLineDash([]);
+  // Goal posts (gold H at each try line)
+  const gpW=sx(18.4), gpH=sy(14), gpUp=sy(28);
+  ctx.strokeStyle='#FFD700'; ctx.lineWidth=Math.max(2,sx(1.2));
+  for(const gx of [tryL,tryR]){
+    const cy2=CH/2;
+    ctx.beginPath(); ctx.moveTo(gx,cy2+gpH*0.4); ctx.lineTo(gx,cy2-gpUp); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx-gpW/2,cy2); ctx.lineTo(gx+gpW/2,cy2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx-gpW/2,cy2); ctx.lineTo(gx-gpW/2,cy2-gpUp); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(gx+gpW/2,cy2); ctx.lineTo(gx+gpW/2,cy2-gpUp); ctx.stroke();
+  }
+}
+
+function drawBaseballField(){
+  const W=FIELDS.baseball.W, H=FIELDS.baseball.H;
+  ctx.fillStyle='#2d7a2d'; ctx.fillRect(0,0,CW,CH);
+  const hp=r2c(W/2,H-30);
+  // Infield dirt circle
+  ctx.fillStyle='#b5651d';
+  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(95),0,Math.PI*2); ctx.fill();
+  // Infield grass
+  ctx.fillStyle='#2d7a2d';
+  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(60),0,Math.PI*2); ctx.fill();
+  const LW=Math.max(1.5,sx(1));
+  // Outfield fence arc
+  ctx.strokeStyle='#4a4a1a'; ctx.lineWidth=Math.max(3,sx(2));
+  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(330),-Math.PI*0.78,-Math.PI*0.22,false); ctx.stroke();
+  // Warning track (wider stroke)
+  ctx.strokeStyle='rgba(180,100,30,0.5)'; ctx.lineWidth=sx(20);
+  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(320),-Math.PI*0.77,-Math.PI*0.23,false); ctx.stroke();
+  // Foul lines
+  const rfCorner=r2c(W-10,20), lfCorner=r2c(10,20);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
+  ctx.beginPath(); ctx.moveTo(hp.x,hp.y); ctx.lineTo(rfCorner.x,rfCorner.y); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hp.x,hp.y); ctx.lineTo(lfCorner.x,lfCorner.y); ctx.stroke();
+  // Diamond baselines
+  const d=63.64;
+  const b1=r2c(W/2+d,H-30-d), b2=r2c(W/2,H-30-d*2), b3=r2c(W/2-d,H-30-d);
+  ctx.beginPath();
+  ctx.moveTo(hp.x,hp.y); ctx.lineTo(b1.x,b1.y);
+  ctx.lineTo(b2.x,b2.y); ctx.lineTo(b3.x,b3.y);
+  ctx.closePath(); ctx.stroke();
+  // Pitcher's mound
+  const mound=r2c(W/2,H-30-60.5);
+  ctx.fillStyle='#c8a060';
+  ctx.beginPath(); ctx.arc(mound.x,mound.y,sx(9),0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=LW*0.6;
+  ctx.beginPath(); ctx.arc(mound.x,mound.y,sx(9),0,Math.PI*2); ctx.stroke();
+  // Pitcher's rubber
+  ctx.fillStyle='#fff';
+  ctx.fillRect(mound.x-sx(1),mound.y-sy(0.5),sx(2),sy(1));
+  // Bases (white squares)
+  const bs=sx(2.5);
+  for(const b of [b1,b2,b3]){
+    ctx.fillStyle='#fff'; ctx.fillRect(b.x-bs/2,b.y-bs/2,bs,bs);
+  }
+  // Home plate (pentagon)
+  ctx.fillStyle='#fff'; ctx.beginPath();
+  ctx.moveTo(hp.x,hp.y+sy(1.5)); ctx.lineTo(hp.x+sx(1.5),hp.y);
+  ctx.lineTo(hp.x+sx(1.5),hp.y-sy(1.5)); ctx.lineTo(hp.x-sx(1.5),hp.y-sy(1.5));
+  ctx.lineTo(hp.x-sx(1.5),hp.y); ctx.closePath(); ctx.fill();
+}
+
+function drawFieldHockeyField(){
+  const W=FIELDS.fieldhockey.W, H=FIELDS.fieldhockey.H;
+  ctx.fillStyle='#1a6b3c'; ctx.fillRect(0,0,CW,CH);
+  for(let i=0;i<4;i++){
+    if(i%2===0){ ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.fillRect(sx(i*75),0,sx(75),CH); }
+  }
+  const LW=Math.max(1.5,sx(0.8)), sp=sy(3);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=LW*2;
+  ctx.strokeRect(0,sp,CW,CH-sp*2);
+  ctx.lineWidth=LW;
+  // Center line
+  ctx.beginPath(); ctx.moveTo(CW/2,sp); ctx.lineTo(CW/2,CH-sp); ctx.stroke();
+  // 25-yard lines (75ft)
+  ctx.beginPath(); ctx.moveTo(sx(75),sp); ctx.lineTo(sx(75),CH-sp); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CW-sx(75),sp); ctx.lineTo(CW-sx(75),CH-sp); ctx.stroke();
+  // Center circle (15ft radius)
+  ctx.beginPath(); ctx.arc(CW/2,CH/2,sx(15),0,Math.PI*2); ctx.stroke();
+  // Shooting circles (D-shapes) at each end using ellipse
+  const Dx=sx(48.9), Dy=sy(48.9);
+  for(let side=0;side<2;side++){
+    const goalX=side===0?0:CW, ddir=side===0?1:-1;
+    // D arc (ellipse from top to bottom on goal-line side)
+    ctx.beginPath();
+    if(ctx.ellipse){
+      const eCx=goalX, eCy=CH/2;
+      ctx.ellipse(eCx,eCy,Dx,Dy,0,side===0?-Math.PI/2:Math.PI/2,side===0?Math.PI/2:-Math.PI/2,false);
+    } else {
+      // Fallback: arc with sx radius
+      ctx.arc(goalX,CH/2,Dx,side===0?-Math.PI/2:Math.PI/2,side===0?Math.PI/2:-Math.PI/2,false);
+    }
+    ctx.stroke();
+    // Straight line on goal-line between D endpoints
+    ctx.beginPath(); ctx.moveTo(goalX,CH/2-Dy); ctx.lineTo(goalX,CH/2+Dy); ctx.stroke();
+    // Penalty spot (15ft into field)
+    const spotX=side===0?sx(15):CW-sx(15);
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(spotX,CH/2,sx(0.8),0,Math.PI*2); ctx.fill();
+    // Goal rectangle (12ft wide, 2ft deep)
+    const goalHW=sy(6);
+    ctx.strokeStyle='#fff'; ctx.lineWidth=LW*2;
+    ctx.strokeRect(side===0?0:CW-sx(2),CH/2-goalHW,sx(2),goalHW*2);
+    ctx.lineWidth=LW;
+  }
+  // Corner arcs (1-yard = 3ft)
+  const cArcR=sx(3);
+  ctx.beginPath(); ctx.arc(0,sp,cArcR,0,Math.PI/2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(CW,sp,cArcR,Math.PI/2,Math.PI); ctx.stroke();
+  ctx.beginPath(); ctx.arc(0,CH-sp,cArcR,-Math.PI/2,0); ctx.stroke();
+  ctx.beginPath(); ctx.arc(CW,CH-sp,cArcR,-Math.PI,-Math.PI/2); ctx.stroke();
 }
 
 // ─────────────────────────────────────────────
@@ -1303,13 +1724,53 @@ function deleteAct(id){
 }
 function resetActs(){ acts=[{id:'act1',label:'Act 1'}]; currentActId='act1'; buildActBar(); }
 
-function setIce(type){
-  iceType=type; players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null;
-  document.querySelectorAll('.ice-btn').forEach((b,i)=>b.classList.toggle('active',(type==='full'&&i===0)||(type==='half'&&i===1)));
-  document.getElementById('canvas-wrap').className = type==='full' ? 'full-mode' : 'half-mode';
+function setSport(newSport, newSurfaceType){
+  sport = newSport;
+  surfaceType = newSurfaceType || 'full';
+  const isIce = (sport==='hockey'||sport==='ringette');
+  iceType = (isIce && surfaceType==='half') ? 'half' : 'full';
+  players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null;
+  document.getElementById('canvas-wrap').className = iceType==='half' ? 'half-mode' : 'full-mode';
+  updateSportLabel();
   resetActs(); buildGrid(); resize();
-  if(type==='half') document.getElementById('rink-section').scrollTop = 0;
+  if(iceType==='half') document.getElementById('rink-section').scrollTop=0;
 }
+function updateSportLabel(){
+  const names={hockey:'Hockey',ringette:'Ringette',football:'Football',basketball:'Basketball',volleyball:'Volleyball',rugby:'Rugby',baseball:'Baseball',fieldhockey:'Field Hockey'};
+  const isIce=(sport==='hockey'||sport==='ringette');
+  const suffix = surfaceType==='half' ? (isIce?' — Half Ice':' — Half Court') : (isIce?' — Full Ice':'');
+  const el=document.getElementById('sport-label');
+  if(el) el.textContent=(names[sport]||sport)+suffix;
+  document.querySelectorAll('.sport-menu-item').forEach(item=>{
+    const fn=item.getAttribute('onclick')||'';
+    const active = fn.includes(`'${sport}'`) && (
+      (surfaceType==='full' && (fn.includes("'full'") || (!fn.includes("'half'") && !fn.includes(',')))) ||
+      (surfaceType==='half' && fn.includes("'half'"))
+    );
+    item.classList.toggle('active', active);
+  });
+  const btn=document.getElementById('sport-sel-btn');
+  if(btn) btn.classList.remove('open');
+  const menu=document.getElementById('sport-menu');
+  if(menu) menu.classList.remove('open');
+}
+function toggleSportMenu(){
+  const btn=document.getElementById('sport-sel-btn');
+  const menu=document.getElementById('sport-menu');
+  if(!menu) return;
+  const open=menu.classList.toggle('open');
+  if(btn) btn.classList.toggle('open',open);
+}
+document.addEventListener('click',function(e){
+  const sel=document.getElementById('sport-select');
+  if(sel&&!sel.contains(e.target)){
+    const menu=document.getElementById('sport-menu');
+    const btn=document.getElementById('sport-sel-btn');
+    if(menu) menu.classList.remove('open');
+    if(btn) btn.classList.remove('open');
+  }
+});
+function setIce(type){ setSport(sport, type); }
 function setMode(m){
   mode=m; drawingMove=null; isDrawing=false; currentWaypoints=[];
   document.querySelectorAll('.move-btn').forEach(b=>b.classList.toggle('active',b.dataset.m===m));
