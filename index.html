@@ -893,57 +893,16 @@ function drawRingetteField(){
   const B=getBOARD(), cr=sx(R.cornerR);
   if(iceType==='half'){
     ctx.fillStyle='#111'; halfBoardPath(cr,B); ctx.fill();
-    halfIcePath(B,cr); ctx.fillStyle='#e8f4fd'; ctx.fill();
+    halfIcePath(B,cr); ctx.fillStyle='#ffffff'; ctx.fill();
     ctx.save(); halfIcePath(B,cr); ctx.clip();
-    drawRingetteMarkings('half',B); ctx.restore();
+    drawLines('half',B); ctx.restore();
     ctx.strokeStyle='#000'; ctx.lineWidth=1.5; halfIcePath(B,cr); ctx.stroke();
   } else {
     ctx.fillStyle='#111'; rrect(0,0,CW,CH,cr+B*0.5); ctx.fill();
-    rrect(B,B,CW-B*2,CH-B*2,cr); ctx.fillStyle='#e8f4fd'; ctx.fill();
+    rrect(B,B,CW-B*2,CH-B*2,cr); ctx.fillStyle='#ffffff'; ctx.fill();
     ctx.save(); rrect(B,B,CW-B*2,CH-B*2,cr); ctx.clip();
-    drawRingetteMarkings('full',B); ctx.restore();
+    drawLines('full',B); ctx.restore();
     rrect(B,B,CW-B*2,CH-B*2,cr); ctx.strokeStyle='#000'; ctx.lineWidth=1.5; ctx.stroke();
-  }
-}
-function drawRingetteMarkings(mode, B){
-  ctx.setLineDash([]);
-  const glL=sx(R.goalLineX), glR=sx(R.W-R.goalLineX);
-  const blL=sx(R.blueLineX), blR=sx(R.W-R.blueLineX);
-  const cx2=CW/2, cy=CH/2;
-  const LW=Math.max(1.1,sx(1.5)*0.75), BLW=Math.max(1.4,sx(2.1)*0.75);
-  const clW=Math.max(3,sx(1.8));
-  const redLine=(x)=>{
-    ctx.fillStyle='#cc0000'; ctx.fillRect(x-clW/2,B,clW,CH-B*2);
-    ctx.strokeStyle='#fff'; ctx.lineWidth=clW*0.65;
-    ctx.setLineDash([sy(4.5),sy(3.5)]);
-    ctx.beginPath(); ctx.moveTo(x,B); ctx.lineTo(x,CH-B); ctx.stroke();
-    ctx.setLineDash([]);
-  };
-  const rcrease=(gx,gy,dir)=>{
-    const rCR=sx(15);
-    ctx.strokeStyle='#cc0000'; ctx.lineWidth=LW;
-    ctx.beginPath();
-    if(dir===1) ctx.arc(gx,gy,rCR,-Math.PI/2,Math.PI/2);
-    else ctx.arc(gx,gy,rCR,Math.PI/2,-Math.PI/2);
-    ctx.stroke();
-  };
-  if(mode==='full'){
-    vline(glL,'#cc0000',LW,B); vline(glR,'#cc0000',LW,B);
-    vline(blL,'#1a4ab0',BLW,B); vline(blR,'#1a4ab0',BLW,B);
-    redLine(cx2);
-    circle(cx2,cy,circR(R.circleR),'#1a4ab0',LW);
-    dot(cx2,cy,circR(1.3),'#cc0000');
-    rcrease(glL,cy,1); drawCrease(glL,cy,1); drawNet(glL,cy,1);
-    rcrease(glR,cy,-1); drawCrease(glR,cy,-1); drawNet(glR,cy,-1);
-  } else {
-    vline(glL,'#cc0000',LW,B);
-    vline(blL,'#1a4ab0',BLW,B);
-    vline(CW,'#1a4ab0',BLW,B);
-    const cx2h=sx(R.W/2);
-    redLine(cx2h);
-    circle(cx2h,cy,circR(R.circleR),'#1a4ab0',LW);
-    dot(cx2h,cy,circR(1.3),'#cc0000');
-    rcrease(glL,cy,1); drawCrease(glL,cy,1); drawNet(glL,cy,1);
   }
 }
 
@@ -1079,60 +1038,78 @@ function drawBasketballField(){
 }
 
 function drawVolleyballField(){
-  ctx.fillStyle='#c8b97a'; ctx.fillRect(0,0,CW,CH);
-  const LW=Math.max(1.5,sx(1.2));
-  const pad=Math.min(sx(4),sy(4));
+  // Free zone background (blue/purple)
+  ctx.fillStyle='#4a50bf';
+  ctx.fillRect(0,0,CW,CH);
+  // Outer dashed free-zone boundary
+  const oz=Math.min(sx(1.8),sy(1.8));
+  ctx.strokeStyle='rgba(255,255,255,0.55)';
+  ctx.lineWidth=Math.max(1,sx(0.5));
+  ctx.setLineDash([sx(2.5),sx(2)]);
+  ctx.strokeRect(oz,oz,CW-oz*2,CH-oz*2);
+  ctx.setLineDash([]);
+  // Court rectangle (coral/salmon fill)
+  const cPx=sx(7), cPy=sy(4);
+  const cx0=cPx, cy0=cPy, cW=CW-cPx*2, cH=CH-cPy*2;
+  ctx.fillStyle='#e0706a';
+  ctx.fillRect(cx0,cy0,cW,cH);
+  // Court boundary (white solid)
+  const LW=Math.max(1.5,sx(0.9));
   ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
-  // Court boundary
-  ctx.strokeRect(pad,pad,CW-pad*2,CH-pad*2);
-  // Net (center line, thicker)
-  ctx.lineWidth=LW*2;
-  ctx.beginPath(); ctx.moveTo(CW/2,pad); ctx.lineTo(CW/2,CH-pad); ctx.stroke();
-  // Attack lines (3m = ~10ft from net each side)
+  ctx.strokeRect(cx0,cy0,cW,cH);
+  // Net / center line (thicker)
+  const netX=CW/2;
+  ctx.lineWidth=LW*2.5;
+  ctx.beginPath(); ctx.moveTo(netX,cy0); ctx.lineTo(netX,cy0+cH); ctx.stroke();
+  // Attack lines (3m from net = 1/3 of half-court width)
+  const attOff=cW/6;
   ctx.lineWidth=LW;
-  const att=sx(10);
-  ctx.beginPath(); ctx.moveTo(CW/2-att,pad); ctx.lineTo(CW/2-att,CH-pad); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(CW/2+att,pad); ctx.lineTo(CW/2+att,CH-pad); ctx.stroke();
-  // Net post indicators
-  ctx.strokeStyle='#aaa'; ctx.lineWidth=Math.max(2,sx(1));
-  ctx.beginPath(); ctx.moveTo(CW/2,0); ctx.lineTo(CW/2,pad); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(CW/2,CH-pad); ctx.lineTo(CW/2,CH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(netX-attOff,cy0); ctx.lineTo(netX-attOff,cy0+cH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(netX+attOff,cy0); ctx.lineTo(netX+attOff,cy0+cH); ctx.stroke();
+  // Net antenna posts (filled circles outside court top/bottom)
+  const postR=Math.max(5,Math.min(sx(1.5),sy(1.5)));
+  ctx.fillStyle='#fff';
+  ctx.beginPath(); ctx.arc(netX,cy0-postR*0.5,postR,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(netX,cy0+cH+postR*0.5,postR,0,Math.PI*2); ctx.fill();
 }
 
 function drawRugbyField(){
-  ctx.fillStyle='#2d7a2d'; ctx.fillRect(0,0,CW,CH);
   const inGoal=sx(33);
   const tryL=inGoal, tryR=CW-inGoal;
   const half=CW/2;
   const line22L=inGoal+sx(72), line22R=CW-inGoal-sx(72);
-  // Alternating stripe
-  for(let i=0;i<12;i++){
-    if(i%2===0){ ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.fillRect(inGoal+sx(i*33),0,sx(33),CH); }
-  }
-  // In-goal darker
-  ctx.fillStyle='#1e5c1e';
+  const line10L=half-sx(33), line10R=half+sx(33);
+  const sp=sy(5);
+  // Field fill
+  ctx.fillStyle='#2d8a2d'; ctx.fillRect(0,0,CW,CH);
+  // In-goal darker green
+  ctx.fillStyle='#1e6a1e';
   ctx.fillRect(0,0,inGoal,CH); ctx.fillRect(CW-inGoal,0,inGoal,CH);
-  const LW=Math.max(1.5,sx(0.8)), sp=sy(5);
-  // Field boundary
-  ctx.strokeStyle='#fff'; ctx.lineWidth=LW*2;
+  const LW=Math.max(1.5,sx(0.8));
+  // Solid outer boundary only
+  ctx.strokeStyle='#fff'; ctx.lineWidth=LW*2; ctx.setLineDash([]);
   ctx.strokeRect(0,sp,CW,CH-sp*2);
-  // Try lines
+  // Try lines solid (thicker)
+  ctx.lineWidth=LW*1.8; ctx.setLineDash([]);
   ctx.beginPath(); ctx.moveTo(tryL,sp); ctx.lineTo(tryL,CH-sp); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(tryR,sp); ctx.lineTo(tryR,CH-sp); ctx.stroke();
-  // Halfway
-  ctx.beginPath(); ctx.moveTo(half,sp); ctx.lineTo(half,CH-sp); ctx.stroke();
+  // All other internal lines: dashed
   ctx.lineWidth=LW;
-  // 22m lines
-  ctx.beginPath(); ctx.moveTo(line22L,sp); ctx.lineTo(line22L,CH-sp); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(line22R,sp); ctx.lineTo(line22R,CH-sp); ctx.stroke();
-  // 10m lines (dashed)
-  ctx.setLineDash([sx(3),sx(3)]);
-  const line10L=half-sx(33), line10R=half+sx(33);
-  ctx.beginPath(); ctx.moveTo(line10L,sp); ctx.lineTo(line10L,CH-sp); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(line10R,sp); ctx.lineTo(line10R,CH-sp); ctx.stroke();
+  ctx.setLineDash([sy(3.5),sy(3.5)]);
+  for(const x of [line22L,line22R,line10L,line10R,half]){
+    ctx.beginPath(); ctx.moveTo(x,sp); ctx.lineTo(x,CH-sp); ctx.stroke();
+  }
+  // 5m in-from-sideline horizontal dashes at key vertical lines
+  ctx.lineWidth=LW*0.75;
+  ctx.setLineDash([sx(4),sx(4)]);
+  const m5a=sp+sy(16), m5b=CH-sp-sy(16);
+  for(const x of [tryL,tryR,line22L,line22R,half]){
+    ctx.beginPath(); ctx.moveTo(x-sx(9),m5a); ctx.lineTo(x+sx(9),m5a); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x-sx(9),m5b); ctx.lineTo(x+sx(9),m5b); ctx.stroke();
+  }
   ctx.setLineDash([]);
-  // Goal posts (gold H at each try line)
-  const gpW=sx(18.4), gpH=sy(14), gpUp=sy(28);
+  // Goal posts — gold H at each try line
+  const gpW=sx(18.4), gpH=sy(14), gpUp=sy(30);
   ctx.strokeStyle='#FFD700'; ctx.lineWidth=Math.max(2,sx(1.2));
   for(const gx of [tryL,tryR]){
     const cy2=CH/2;
@@ -1147,50 +1124,70 @@ function drawBaseballField(){
   const W=FIELDS.baseball.W, H=FIELDS.baseball.H;
   ctx.fillStyle='#2d7a2d'; ctx.fillRect(0,0,CW,CH);
   const hp=r2c(W/2,H-30);
-  // Infield dirt circle
-  ctx.fillStyle='#b5651d';
-  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(95),0,Math.PI*2); ctx.fill();
-  // Infield grass
-  ctx.fillStyle='#2d7a2d';
-  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(60),0,Math.PI*2); ctx.fill();
+  const d=63.64;
+  const b1=r2c(W/2+d,H-30-d), b2=r2c(W/2,H-30-d*2), b3=r2c(W/2-d,H-30-d);
+  const mound=r2c(W/2,H-30-60.5);
+  const rfCorner=r2c(W-8,8), lfCorner=r2c(8,8);
   const LW=Math.max(1.5,sx(1));
-  // Outfield fence arc
-  ctx.strokeStyle='#4a4a1a'; ctx.lineWidth=Math.max(3,sx(2));
-  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(330),-Math.PI*0.78,-Math.PI*0.22,false); ctx.stroke();
-  // Warning track (wider stroke)
-  ctx.strokeStyle='rgba(180,100,30,0.5)'; ctx.lineWidth=sx(20);
-  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(320),-Math.PI*0.77,-Math.PI*0.23,false); ctx.stroke();
+  // Warning track (outer dirt ring behind fence)
+  ctx.fillStyle='#b07840';
+  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(335),-Math.PI*0.80,-Math.PI*0.20,false); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hp.x,hp.y);
+  ctx.arc(hp.x,hp.y,sx(335),-Math.PI*0.80,-Math.PI*0.20,false);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#2d7a2d';
+  ctx.beginPath(); ctx.moveTo(hp.x,hp.y);
+  ctx.arc(hp.x,hp.y,sx(310),-Math.PI*0.80,-Math.PI*0.20,false);
+  ctx.closePath(); ctx.fill();
+  // Infield dirt
+  ctx.fillStyle='#c88c4a';
+  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(95),0,Math.PI*2); ctx.fill();
+  // Infield grass cutout
+  ctx.fillStyle='#2d7a2d';
+  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(62),0,Math.PI*2); ctx.fill();
   // Foul lines
-  const rfCorner=r2c(W-10,20), lfCorner=r2c(10,20);
   ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
   ctx.beginPath(); ctx.moveTo(hp.x,hp.y); ctx.lineTo(rfCorner.x,rfCorner.y); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(hp.x,hp.y); ctx.lineTo(lfCorner.x,lfCorner.y); ctx.stroke();
+  // Outfield fence
+  ctx.strokeStyle='#fff'; ctx.lineWidth=Math.max(3,sx(2));
+  ctx.beginPath(); ctx.arc(hp.x,hp.y,sx(310),-Math.PI*0.80,-Math.PI*0.20,false); ctx.stroke();
   // Diamond baselines
-  const d=63.64;
-  const b1=r2c(W/2+d,H-30-d), b2=r2c(W/2,H-30-d*2), b3=r2c(W/2-d,H-30-d);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=LW;
   ctx.beginPath();
   ctx.moveTo(hp.x,hp.y); ctx.lineTo(b1.x,b1.y);
   ctx.lineTo(b2.x,b2.y); ctx.lineTo(b3.x,b3.y);
   ctx.closePath(); ctx.stroke();
   // Pitcher's mound
-  const mound=r2c(W/2,H-30-60.5);
-  ctx.fillStyle='#c8a060';
+  ctx.fillStyle='#c88c4a';
   ctx.beginPath(); ctx.arc(mound.x,mound.y,sx(9),0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle='rgba(255,255,255,0.4)'; ctx.lineWidth=LW*0.6;
-  ctx.beginPath(); ctx.arc(mound.x,mound.y,sx(9),0,Math.PI*2); ctx.stroke();
   // Pitcher's rubber
   ctx.fillStyle='#fff';
-  ctx.fillRect(mound.x-sx(1),mound.y-sy(0.5),sx(2),sy(1));
-  // Bases (white squares)
-  const bs=sx(2.5);
+  ctx.fillRect(mound.x-sx(1.2),mound.y-sy(0.4),sx(2.4),sy(0.8));
+  // Bases (white squares, rotated 45°)
+  const bs=Math.max(5,sx(3));
   for(const b of [b1,b2,b3]){
-    ctx.fillStyle='#fff'; ctx.fillRect(b.x-bs/2,b.y-bs/2,bs,bs);
+    ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(Math.PI/4);
+    ctx.fillStyle='#fff'; ctx.fillRect(-bs/2,-bs/2,bs,bs);
+    ctx.restore();
   }
   // Home plate (pentagon)
   ctx.fillStyle='#fff'; ctx.beginPath();
-  ctx.moveTo(hp.x,hp.y+sy(1.5)); ctx.lineTo(hp.x+sx(1.5),hp.y);
-  ctx.lineTo(hp.x+sx(1.5),hp.y-sy(1.5)); ctx.lineTo(hp.x-sx(1.5),hp.y-sy(1.5));
-  ctx.lineTo(hp.x-sx(1.5),hp.y); ctx.closePath(); ctx.fill();
+  ctx.moveTo(hp.x,hp.y+sy(2)); ctx.lineTo(hp.x+sx(2),hp.y);
+  ctx.lineTo(hp.x+sx(2),hp.y-sy(1.5)); ctx.lineTo(hp.x-sx(2),hp.y-sy(1.5));
+  ctx.lineTo(hp.x-sx(2),hp.y); ctx.closePath(); ctx.fill();
+  // Dugouts (rectangles in foul territory, left and right of home)
+  const dugW=sx(30), dugH=sy(16);
+  ctx.strokeStyle='rgba(255,255,255,0.75)'; ctx.lineWidth=Math.max(1,LW*0.8);
+  const dug1=r2c(W/2-88,H-15), dug2=r2c(W/2+88,H-15);
+  ctx.strokeRect(dug1.x-dugW/2,dug1.y-dugH/2,dugW,dugH);
+  ctx.strokeRect(dug2.x-dugW/2,dug2.y-dugH/2,dugW,dugH);
+  // On-deck circles
+  const odR=Math.max(4,sx(7));
+  ctx.strokeStyle='rgba(190,120,50,0.9)'; ctx.lineWidth=Math.max(1.5,sx(1));
+  const od1=r2c(W/2-55,H-18), od2=r2c(W/2+55,H-18);
+  ctx.beginPath(); ctx.arc(od1.x,od1.y,odR,0,Math.PI*2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(od2.x,od2.y,odR,0,Math.PI*2); ctx.stroke();
 }
 
 function drawFieldHockeyField(){
