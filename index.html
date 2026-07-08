@@ -132,6 +132,40 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 .mbtns button{padding:7px 16px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:600}
 #mCancel{background:#0d2035;color:#6a9ab8}
 #mOK{background:#00a8ff;color:#000}
+
+/* ── HEADER ACTIONS (undo/redo/export) ── */
+.header-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-icon-btn{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;border:1px solid #1a4a6a;background:#071422;color:#5a8aaa;cursor:pointer;transition:all .18s;flex-shrink:0}
+.hdr-icon-btn:hover:not(:disabled){border-color:#00a8ff;color:#00a8ff;background:#0d2035}
+.hdr-icon-btn:disabled{opacity:0.28;cursor:not-allowed}
+.hdr-export-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:8px;border:1px solid #00a8ff;background:linear-gradient(135deg,#0055aa,#0088cc);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap;letter-spacing:.4px}
+.hdr-export-btn:hover{background:linear-gradient(135deg,#0066cc,#00aaff);box-shadow:0 2px 12px #00a8ff44}
+
+/* ── EXPORT MODAL ── */
+.xmodal-overlay{display:none;position:fixed;inset:0;background:rgba(0,5,15,.82);z-index:400;align-items:center;justify-content:center}
+.xmodal-overlay.open{display:flex}
+.xmodal-box{background:#071422;border:1px solid #1a4a6a;border-radius:16px;width:420px;max-width:94vw;box-shadow:0 16px 48px rgba(0,0,0,.7);overflow:hidden}
+.xmodal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid #0d2035}
+.xmodal-header h3{color:#fff;font-size:15px;font-weight:700;margin:0}
+.xmodal-close{background:none;border:none;color:#5a8aaa;font-size:18px;cursor:pointer;padding:2px 6px;border-radius:5px;line-height:1}
+.xmodal-close:hover{color:#fff;background:#0d2035}
+.xmodal-body{padding:20px}
+.xmodal-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#00a8ff;margin-bottom:6px;display:block}
+.xmodal-input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #1a3a5a;background:#0a1a28;color:#fff;font-size:13px;font-family:inherit;margin-bottom:14px;box-sizing:border-box}
+.xmodal-input::placeholder{color:#2a5a7a}
+.xmodal-input:focus{outline:none;border-color:#00a8ff}
+.xmodal-textarea{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #1a3a5a;background:#0a1a28;color:#fff;font-size:13px;font-family:inherit;height:80px;resize:vertical;box-sizing:border-box}
+.xmodal-textarea::placeholder{color:#2a5a7a}
+.xmodal-textarea:focus{outline:none;border-color:#00a8ff}
+.xmodal-hint{font-size:10px;color:#3a6a8a;margin-top:-10px;margin-bottom:14px}
+.xmodal-footer{display:flex;gap:10px;padding:14px 20px 18px;border-top:1px solid #0d2035;justify-content:flex-end}
+.xmodal-cancel{padding:8px 16px;border-radius:8px;border:1px solid #1a4a6a;background:transparent;color:#5a8aaa;font-size:12px;font-weight:600;cursor:pointer}
+.xmodal-cancel:hover{background:#0d2035;color:#fff}
+.xmodal-png{padding:8px 18px;border-radius:8px;border:1px solid #1a6a4a;background:#071e14;color:#00cc88;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+.xmodal-png:hover{background:#0a2a1e;border-color:#00ee99}
+.xmodal-pdf{padding:8px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#0055aa,#0088cc);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+.xmodal-pdf:hover{background:linear-gradient(135deg,#0066cc,#00aaff);box-shadow:0 2px 10px #00a8ff44}
+.xmodal-status{font-size:11px;color:#00a8ff;align-self:center;margin-right:auto}
 </style>
 </head>
 <body>
@@ -164,6 +198,18 @@ input[type=range]{width:100%;accent-color:#00a8ff}
       <div class="sport-menu-item" onclick="setSport('baseball','full')">Baseball</div>
       <div class="sport-menu-item" onclick="setSport('fieldhockey','full')">Field Hockey</div>
     </div>
+  </div>
+  <div class="header-actions">
+    <button class="hdr-icon-btn" id="undo-btn" title="Undo (Ctrl+Z)" onclick="undo()" disabled>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 7H11C12.65 7 14 8.35 14 10C14 11.65 12.65 13 11 13H7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5.5 4.5L3 7L5.5 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="hdr-icon-btn" id="redo-btn" title="Redo (Ctrl+Y)" onclick="redo()" disabled>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 7H5C3.35 7 2 8.35 2 10C2 11.65 3.35 13 5 13H9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M10.5 4.5L13 7L10.5 9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="hdr-export-btn" onclick="openExportModal()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v8M3.5 6l3 3 3-3M1 10v1.5A1.5 1.5 0 002.5 13h8a1.5 1.5 0 001.5-1.5V10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Export
+    </button>
   </div>
 </div>
 
@@ -446,6 +492,7 @@ function removeLastPlayer(base){
   buildGrid(); render();
 }
 function addPlayerCenter(pos){
+  pushUndo();
   const label = getLabel(pos.base);
   const id = 'p'+Date.now()+Math.random();
   const fw=getFieldW(), fh=getFieldH();
@@ -1573,11 +1620,12 @@ function onCDown(e){
 
   if(mode==='delMove'){
     const mv=moveAt(cx,cy);
-    if(mv){ moves=moves.filter(m=>m.id!==mv.id); tip('Move deleted.'); render(); }
+    if(mv){ pushUndo(); moves=moves.filter(m=>m.id!==mv.id); tip('Move deleted.'); render(); }
     return;
   }
   if(mode==='del'){
     if(p){
+      pushUndo();
       players=players.filter(pl=>pl.id!==p.id);
       moves=moves.filter(m=>m.playerId!==p.id);
       selectedId=null; selInfo(null); buildGrid(); render();
@@ -1585,7 +1633,7 @@ function onCDown(e){
     return;
   }
   if(mode==='select'){
-    if(p){ dragPlayer=p; const lp=getPlayerLogicalPos(p); const pos=r2c(lp.x,lp.y); dragOff={x:cx-pos.x,y:cy-pos.y}; selectedId=p.id; selInfo(p); }
+    if(p){ pushUndo(); dragPlayer=p; const lp=getPlayerLogicalPos(p); const pos=r2c(lp.x,lp.y); dragOff={x:cx-pos.x,y:cy-pos.y}; selectedId=p.id; selInfo(p); }
     else { selectedId=null; selInfo(null); }
     render(); return;
   }
@@ -1625,6 +1673,7 @@ function finishDraw(){
   if(isDrawing&&drawingMove&&currentWaypoints.length>=2){
     const src=players.find(pl=>pl.id===drawingMove.playerId);
     if(src){
+      pushUndo();
       const t=drawingMove.type;
       const raw=(t==='pass'||t==='shot')?[currentWaypoints[0],currentWaypoints[currentWaypoints.length-1]]:currentWaypoints;
       const simp=simplifyPath(raw,1.2);
@@ -1661,6 +1710,7 @@ function onGUp(e){
     const cx=iceType==='half'?sy:sx, cy=iceType==='half'?CH-sx:sy;
     const inCanvas=sx>=0&&sy>=0&&sx<=canvas.width&&sy<=canvas.height;
     if(inCanvas){
+      pushUndo();
       const rp=c2r(cx,cy);
       const id='p'+Date.now()+Math.random();
       const label=getLabel(dragToken.base);
@@ -1708,12 +1758,14 @@ function setCurrentAct(id){
   tip(`Editing ${acts.find(a=>a.id===id).label} — players move simultaneously within an act`);
 }
 function addAct(){
+  pushUndo();
   const id='act'+Date.now();
   acts.push({id,label:'Act '+(acts.length+1)});
   setCurrentAct(id);
 }
 function deleteAct(id){
   if(acts.length<=1) return;
+  pushUndo();
   const idx=acts.findIndex(a=>a.id===id);
   moves=moves.filter(m=>(m.actId||acts[0].id)!==id);
   acts.splice(idx,1);
@@ -1723,6 +1775,146 @@ function deleteAct(id){
   setCurrentAct(nextId);
 }
 function resetActs(){ acts=[{id:'act1',label:'Act 1'}]; currentActId='act1'; buildActBar(); }
+
+// ─────────────────────────────────────────────
+// UNDO / REDO
+// ─────────────────────────────────────────────
+const MAX_HISTORY = 60;
+let undoStack = [], redoStack = [];
+
+function captureState(){
+  return JSON.stringify({
+    players: players.map(p=>({...p})),
+    moves: moves.map(m=>({...m, waypoints: m.waypoints.map(w=>({...w}))}))
+  });
+}
+function applyState(json){
+  const s = JSON.parse(json);
+  players = s.players;
+  moves = s.moves;
+  selectedId = null; isDrawing = false; currentWaypoints = []; drawingMove = null;
+  buildGrid(); render(); updateUndoUI();
+}
+function pushUndo(){
+  undoStack.push(captureState());
+  if(undoStack.length > MAX_HISTORY) undoStack.shift();
+  redoStack = [];
+  updateUndoUI();
+}
+function undo(){
+  if(!undoStack.length) return;
+  redoStack.push(captureState());
+  applyState(undoStack.pop());
+}
+function redo(){
+  if(!redoStack.length) return;
+  undoStack.push(captureState());
+  applyState(redoStack.pop());
+}
+function updateUndoUI(){
+  const u = document.getElementById('undo-btn');
+  const r = document.getElementById('redo-btn');
+  if(u) u.disabled = !undoStack.length;
+  if(r) r.disabled = !redoStack.length;
+}
+document.addEventListener('keydown', e => {
+  const ctrl = e.ctrlKey || e.metaKey;
+  if(ctrl && e.key === 'z' && !e.shiftKey){ e.preventDefault(); undo(); }
+  if(ctrl && (e.key === 'y' || (e.key === 'z' && e.shiftKey))){ e.preventDefault(); redo(); }
+});
+
+// ─────────────────────────────────────────────
+// EXPORT
+// ─────────────────────────────────────────────
+function openExportModal(){
+  const hint = document.getElementById('export-acts-hint');
+  if(hint) hint.textContent = acts.length > 1
+    ? `PDF will include all ${acts.length} acts — one per page.`
+    : 'PNG exports the current view. PDF adds title and notes.';
+  document.getElementById('export-status').textContent = '';
+  document.getElementById('export-modal').classList.add('open');
+}
+function closeExportModal(){
+  document.getElementById('export-modal').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  const modal = document.getElementById('export-modal');
+  if(modal && modal.classList.contains('open') && e.target === modal) closeExportModal();
+});
+
+function exportPNG(){
+  render();
+  const title = (document.getElementById('export-title')?.value || 'drill').trim() || 'drill';
+  const dataURL = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = title.replace(/[^a-zA-Z0-9 _-]/g,'_') + '.png';
+  a.click();
+  closeExportModal();
+}
+
+async function exportPDF(){
+  const statusEl = document.getElementById('export-status');
+  if(statusEl) statusEl.textContent = 'Generating…';
+  await new Promise(r => setTimeout(r, 0));
+  try{
+    const jsPDFLib = window.jspdf?.jsPDF;
+    if(!jsPDFLib){ if(statusEl) statusEl.textContent = 'PDF library not loaded yet — try again in a moment.'; return; }
+    const title = (document.getElementById('export-title')?.value || 'Drill').trim() || 'Drill';
+    const notes = (document.getElementById('export-notes')?.value || '').trim();
+    const pdf = new jsPDFLib({orientation:'landscape', unit:'mm', format:'letter'});
+    const PW = 279.4, PH = 215.9, M = 14;
+    const savedActId = currentActId;
+    const navyR=7,navyG=20,navyB=34;
+    for(let i=0; i<acts.length; i++){
+      if(i>0) pdf.addPage();
+      setCurrentAct(acts[i].id); render();
+      const img = canvas.toDataURL('image/png');
+      // Header bar
+      pdf.setFillColor(navyR,navyG,navyB);
+      pdf.rect(0,0,PW,13,'F');
+      pdf.setTextColor(255,255,255);
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(13);
+      pdf.text(title, M, 9);
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+      pdf.setTextColor(0,168,255);
+      pdf.text('TryoutHQ Design Animator', PW-M, 9, {align:'right'});
+      // Image
+      const footerH = notes && i===acts.length-1 ? 36 : 20;
+      const availW = PW - M*2, availH = PH - 15 - footerH;
+      const ratio = canvas.width / canvas.height;
+      let dW, dH;
+      if(availW/availH > ratio){ dH=availH; dW=dH*ratio; } else { dW=availW; dH=dW/ratio; }
+      const imgX=(PW-dW)/2, imgY=15;
+      pdf.addImage(img,'PNG',imgX,imgY,dW,dH);
+      // Act label
+      const botY = imgY+dH+6;
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(9);
+      pdf.setTextColor(0,168,255);
+      pdf.text(acts[i].label, M, botY);
+      // Page number
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8);
+      pdf.setTextColor(120,140,160);
+      pdf.text(`${i+1} / ${acts.length}`, PW-M, PH-4, {align:'right'});
+      // Notes on last page
+      if(notes && i===acts.length-1){
+        pdf.setFillColor(10,26,40);
+        pdf.rect(M, botY+4, PW-M*2, footerH-10, 'F');
+        pdf.setFont('helvetica','bold'); pdf.setFontSize(8); pdf.setTextColor(0,168,255);
+        pdf.text('Coaching Notes', M+3, botY+10);
+        pdf.setFont('helvetica','normal'); pdf.setTextColor(200,220,240);
+        const lines = pdf.splitTextToSize(notes, PW-M*2-6);
+        pdf.text(lines.slice(0,4), M+3, botY+16);
+      }
+    }
+    setCurrentAct(savedActId); render();
+    pdf.save(title.replace(/[^a-zA-Z0-9 _-]/g,'_') + '.pdf');
+    closeExportModal();
+  } catch(err){
+    console.error(err);
+    if(statusEl) statusEl.textContent = 'Export failed — see console.';
+  }
+}
 
 function setSport(newSport, newSurfaceType){
   sport = newSport;
@@ -1779,8 +1971,8 @@ function setMode(m){
 }
 function modeLabel(m){return{skate:'Skate',skatePuck:'Skate w/Puck',pass:'Pass',shot:'Shot'}[m]||m;}
 function setSpeed(v){ animSpeed=parseFloat(v); document.getElementById('speedLbl').textContent=parseFloat(v).toFixed(2).replace(/\.?0+$/,'')+'x'; }
-function resetAll(){ players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); buildGrid(); tip('Board cleared.'); render(); }
-function clearMoves(){ moves=[]; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); tip('All moves cleared.'); render(); }
+function resetAll(){ pushUndo(); players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); buildGrid(); tip('Board cleared.'); render(); }
+function clearMoves(){ pushUndo(); moves=[]; isDrawing=false; currentWaypoints=[]; drawingMove=null; stopAnim(); resetActs(); tip('All moves cleared.'); render(); }
 function tip(t){ document.getElementById('tipbar').textContent=t; }
 
 function saveDrill(){
@@ -1832,5 +2024,28 @@ document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElement
 
 init();
 </script>
+<!-- Export Modal -->
+<div class="xmodal-overlay" id="export-modal">
+  <div class="xmodal-box">
+    <div class="xmodal-header">
+      <h3>Export Drill</h3>
+      <button class="xmodal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    <div class="xmodal-body">
+      <label class="xmodal-label">Drill Name</label>
+      <input class="xmodal-input" id="export-title" type="text" placeholder="Untitled Drill" />
+      <label class="xmodal-label">Coaching Notes</label>
+      <textarea class="xmodal-textarea" id="export-notes" placeholder="Key points, instructions, timing cues…"></textarea>
+      <div class="xmodal-hint" id="export-acts-hint"></div>
+    </div>
+    <div class="xmodal-footer">
+      <span class="xmodal-status" id="export-status"></span>
+      <button class="xmodal-cancel" onclick="closeExportModal()">Cancel</button>
+      <button class="xmodal-png" onclick="exportPNG()">Save PNG</button>
+      <button class="xmodal-pdf" onclick="exportPDF()">Save PDF</button>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 </body>
 </html>
