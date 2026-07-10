@@ -312,9 +312,11 @@ input[type=range]{width:100%;accent-color:#00a8ff}
     </div>
 
     <div id="field-editor-sec" style="display:none">
-      <div class="sec">Field Editor</div>
-      <div style="font-size:10px;color:#4a7a9a;margin-bottom:5px;text-transform:uppercase;font-weight:700;letter-spacing:1px">Background</div>
-      <div id="field-bg-colors" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px"></div>
+      <div class="sec" id="field-editor-title">Field Editor</div>
+      <div id="field-bg-sec">
+        <div style="font-size:10px;color:#4a7a9a;margin-bottom:5px;text-transform:uppercase;font-weight:700;letter-spacing:1px">Background</div>
+        <div id="field-bg-colors" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px"></div>
+      </div>
       <div class="move-types">
         <button class="move-btn" data-m="field-freehand" onclick="setMode('field-freehand')">
           <svg class="move-icon" viewBox="0 0 34 14"><path d="M3 11 Q10 3 17 7 Q24 11 31 3" stroke="#00cc88" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
@@ -715,6 +717,8 @@ function drawRink(){
     ctx.strokeStyle='#000'; ctx.lineWidth=1.5;
     halfIcePath(B,cr); ctx.stroke();
   }
+  // Custom overlay elements drawn on top of ice (e.g. ringette markings)
+  if(customFieldEls.length) customFieldEls.forEach(drawFieldEl);
 }
 
 function rrect(x,y,w,h,r){
@@ -2119,8 +2123,13 @@ function setSport(newSport, newSurfaceType){
   players=[]; moves=[]; selectedId=null; isDrawing=false; currentWaypoints=[]; drawingMove=null;
   document.getElementById('canvas-wrap').className = iceType==='half' ? 'half-mode' : 'full-mode';
   const isCustom = sport==='custom';
+  const isHockey = sport==='hockey';
   const sec = document.getElementById('field-editor-sec');
-  if(sec) sec.style.display = isCustom ? '' : 'none';
+  if(sec) sec.style.display = (isCustom||isHockey) ? '' : 'none';
+  const bgSec = document.getElementById('field-bg-sec');
+  if(bgSec) bgSec.style.display = isCustom ? '' : 'none';
+  const titleEl = document.getElementById('field-editor-title');
+  if(titleEl) titleEl.textContent = isHockey ? 'Ice Template Editor' : 'Field Editor';
   if(isCustom) setMode('field-line');
   updateSportLabel();
   resetActs(); buildGrid(); resize();
