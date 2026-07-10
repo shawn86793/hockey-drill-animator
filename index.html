@@ -338,6 +338,10 @@ input[type=range]{width:100%;accent-color:#00a8ff}
           <svg class="move-icon" viewBox="0 0 34 14"><path d="M3 11 Q10 3 17 7 Q24 11 31 3" stroke="#ff6666" stroke-width="1.8" fill="none" stroke-linecap="round"/><text x="26" y="13" font-size="11" fill="#ff6666">✕</text></svg>
           Erase Element
         </button>
+        <button class="move-btn" data-m="field-pixel-erase" onclick="setMode('field-pixel-erase')">
+          <svg class="move-icon" viewBox="0 0 34 14"><rect x="3" y="3" width="14" height="8" rx="1" fill="#ff9966" opacity="0.9"/><rect x="19" y="4" width="12" height="6" rx="1" fill="none" stroke="#ff9966" stroke-width="1.5" stroke-dasharray="3,2"/></svg>
+          Pixel Eraser
+        </button>
       </div>
       <div style="margin-top:8px">
         <div style="font-size:10px;color:#4a7a9a;margin-bottom:5px;text-transform:uppercase;font-weight:700;letter-spacing:1px">Line Color</div>
@@ -503,6 +507,8 @@ let fieldDrawColor = '#ffffff';
 let fieldDrawLW = 2;
 let fieldDrawDash = 'solid';
 let fieldElStart = null;
+let overlayCanvas = null, overlayCtx2 = null;
+let eraserCanvasPos = null, eraserActive = false, eraserPts = [];
 let fieldPreviewEnd = null;
 let fieldFreehandPts = [];
 const FIELD_BG_COLORS   = ['#1a5c1a','#2d8a2d','#1a3a6a','#0a0a0a','#3d2a1a','#4a3c2a','#c8832a','#1a1a3a'];
@@ -644,6 +650,7 @@ function buildPalette(){
 // RESIZE & COORDS
 // ─────────────────────────────────────────────
 function resize(){
+  overlayCanvas = null; // force recreate at new dimensions
   const section = document.getElementById('rink-section');
   const aw = section.clientWidth-8, ah = section.clientHeight-8;
   if(iceType==='half'){
@@ -718,7 +725,7 @@ function drawRink(){
     halfIcePath(B,cr); ctx.stroke();
   }
   // Custom overlay elements drawn on top of ice (e.g. ringette markings)
-  if(customFieldEls.length) customFieldEls.forEach(drawFieldEl);
+  drawOverlayElements();
 }
 
 function rrect(x,y,w,h,r){
@@ -970,8 +977,52 @@ function drawCustomField(){
   // Outer border
   ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=Math.max(1.5,sx(0.8)); ctx.setLineDash([]);
   ctx.strokeRect(sx(1),sy(1),CW-sx(2),CH-sy(2));
-  // Render all saved field elements
-  customFieldEls.forEach(drawFieldEl);
+  // Render all saved field elements (with eraser support)
+  drawOverlayElements();
+}
+
+function eraserSz(lw){ return Math.max(10, (lw||fieldDrawLW) * CW / getFieldW() * 2.5); }
+
+function drawOverlayElements(){
+  if(!customFieldEls.length && !eraserPts.length) return;
+  // Ensure offscreen canvas matches current drawing dimensions
+  if(!overlayCanvas || overlayCanvas.width!==CW || overlayCanvas.height!==CH){
+    overlayCanvas = document.createElement('canvas');
+    overlayCanvas.width = CW; overlayCanvas.height = CH;
+    overlayCtx2 = overlayCanvas.getContext('2d');
+  }
+  overlayCtx2.clearRect(0, 0, CW, CH);
+  // Draw normal elements onto offscreen, temporarily swapping ctx
+  const savedCtx = ctx;
+  ctx = overlayCtx2;
+  customFieldEls.filter(el=>el.type!=='field-eraser').forEach(drawFieldEl);
+  ctx = savedCtx;
+  // Apply committed eraser strokes with destination-out
+  overlayCtx2.globalCompositeOperation = 'destination-out';
+  overlayCtx2.fillStyle = 'rgba(0,0,0,1)';
+  customFieldEls.filter(el=>el.type==='field-eraser').forEach(el=>{
+    el.pts.forEach(p=>{ const c=r2c(p.x,p.y); const s=eraserSz(el.lw); overlayCtx2.fillRect(c.x-s/2,c.y-s/2,s,s); });
+  });
+  // Apply in-progress eraser stroke
+  if(eraserActive && eraserPts.length){
+    eraserPts.forEach(p=>{ const c=r2c(p.x,p.y); const s=eraserSz(); overlayCtx2.fillRect(c.x-s/2,c.y-s/2,s,s); });
+  }
+  overlayCtx2.globalCompositeOperation = 'source-over';
+  // Composite onto main canvas
+  ctx.drawImage(overlayCanvas, 0, 0, CW, CH);
+}
+
+function drawEraserCursor(){
+  if(mode!=='field-pixel-erase'||!eraserCanvasPos) return;
+  const s = eraserSz();
+  ctx.save();
+  ctx.setLineDash([4,3]);
+  ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.strokeRect(eraserCanvasPos.cx-s/2, eraserCanvasPos.cy-s/2, s, s);
+  ctx.setLineDash([]);
+  ctx.lineWidth = 0.5; ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+  ctx.strokeRect(eraserCanvasPos.cx-s/2, eraserCanvasPos.cy-s/2, s, s);
+  ctx.restore();
 }
 
 function drawFieldEl(el){
@@ -1595,6 +1646,7 @@ function render(){
   drawPreviewMove();
   drawPlayers();
   drawLabels();
+  drawEraserCursor();
   if(iceType==='half') ctx.restore();
   drawDragToken(); // always in portrait/screen coords
 }
@@ -1676,6 +1728,9 @@ function onCDown(e){
     return;
   }
   // Field editor tools
+  if(mode==='field-pixel-erase'){
+    eraserActive=true; eraserPts=[c2r(cx,cy)]; render(); return;
+  }
   if(mode==='field-erase'){
     const el=findFieldElAt(cx,cy);
     if(el){ pushUndo(); customFieldEls=customFieldEls.filter(e=>e!==el); render(); }
@@ -1726,6 +1781,15 @@ function onCMove(e){
     zonePreviewEnd={rx:rp.x,ry:rp.y};
     render();
   }
+  if(mode==='field-pixel-erase'){
+    eraserCanvasPos={cx,cy};
+    if(eraserActive){
+      const rp=c2r(cx,cy);
+      const last=eraserPts[eraserPts.length-1];
+      if(!last||((rp.x-last.x)**2+(rp.y-last.y)**2)>0.2) eraserPts.push(rp);
+    }
+    render(); return;
+  }
   if(mode==='field-freehand'&&fieldFreehandPts.length>0){
     const rp=c2r(cx,cy);
     const last=fieldFreehandPts[fieldFreehandPts.length-1];
@@ -1756,7 +1820,14 @@ function finishDraw(){
   isDrawing=false; currentWaypoints=[]; drawingMove=null;
 }
 
+function commitEraserStroke(){
+  if(!eraserPts.length) return;
+  pushUndo();
+  customFieldEls.push({type:'field-eraser',pts:[...eraserPts],lw:fieldDrawLW});
+  eraserPts=[];
+}
 function onCUp(e){
+  if(mode==='field-pixel-erase'&&eraserActive){ eraserActive=false; commitEraserStroke(); render(); return; }
   if(dragPlayer){dragPlayer=null;render();return;}
   if((mode==='zone-rect'||mode==='zone-circle')&&drawingZoneStart&&zonePreviewEnd){
     const s=drawingZoneStart,en=zonePreviewEnd;
@@ -1793,7 +1864,7 @@ function onCUp(e){
   }
   finishDraw(); render();
 }
-function onCLeave(){ dragPlayer=null; finishDraw(); render(); }
+function onCLeave(){ dragPlayer=null; finishDraw(); if(eraserActive){ eraserActive=false; commitEraserStroke(); } eraserCanvasPos=null; render(); }
 function cancelDraw(){ isDrawing=false; currentWaypoints=[]; drawingMove=null; selectedId=null; selInfo(null); render(); }
 
 // ─────────────────────────────────────────────
@@ -2173,9 +2244,10 @@ document.addEventListener('click',function(e){
 function setIce(type){ setSport(sport, type); }
 function setMode(m){
   mode=m; drawingMove=null; isDrawing=false; currentWaypoints=[];
-  fieldElStart=null; fieldPreviewEnd=null; fieldFreehandPts=[];
+  fieldElStart=null; fieldPreviewEnd=null; fieldFreehandPts=[]; eraserPts=[]; eraserActive=false; eraserCanvasPos=null;
+  if(canvas) canvas.style.cursor = m==='field-pixel-erase' ? 'none' : '';
   document.querySelectorAll('.move-btn,.fld-tool').forEach(b=>b.classList.toggle('active',b.dataset.m===m));
-  const tips={select:'Click to select & drag players.',skate:'Click &amp; drag a player to draw a move path.',skatePuck:'Click &amp; drag a player to draw a move-with-puck/ball path.',block:'Click &amp; drag a player to draw a block (line ends in a T).',pass:'Click &amp; drag a player to draw a pass.',shot:'Click &amp; drag a player to draw a shot.',delMove:'Click any move line to delete it.',del:'Click a player to remove them from the ice.',label:'Click anywhere on the field to place a text label.','zone-rect':'Click & drag to draw a rectangular zone.','zone-circle':'Click & drag to draw an ellipse zone.',delAnnot:'Click any zone or label to delete it.','field-freehand':'Click & drag to draw a freehand line on the field.','field-line':'Click & drag to draw a straight line on the field.','field-rect':'Click & drag to draw a rectangle on the field.','field-circle':'Click & drag to draw a circle/ellipse on the field.','field-erase':'Click a field element to erase it.'};
+  const tips={select:'Click to select & drag players.',skate:'Click &amp; drag a player to draw a move path.',skatePuck:'Click &amp; drag a player to draw a move-with-puck/ball path.',block:'Click &amp; drag a player to draw a block (line ends in a T).',pass:'Click &amp; drag a player to draw a pass.',shot:'Click &amp; drag a player to draw a shot.',delMove:'Click any move line to delete it.',del:'Click a player to remove them from the ice.',label:'Click anywhere on the field to place a text label.','zone-rect':'Click & drag to draw a rectangular zone.','zone-circle':'Click & drag to draw an ellipse zone.',delAnnot:'Click any zone or label to delete it.','field-freehand':'Click & drag to draw a freehand line on the field.','field-line':'Click & drag to draw a straight line on the field.','field-rect':'Click & drag to draw a rectangle on the field.','field-circle':'Click & drag to draw a circle/ellipse on the field.','field-pixel-erase':'Hold & drag to erase — size is set by Line Width.','field-erase':'Click a field element to erase it.'};
   if(m==='label'||m==='zone-rect'||m==='zone-circle'||m==='delAnnot'){
     drawingZoneStart=null; zonePreviewEnd=null; hideLabelInput();
   }
