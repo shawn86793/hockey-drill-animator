@@ -2323,11 +2323,11 @@ function setFieldLW(v){ fieldDrawLW=v; document.querySelectorAll('#field-lw-btns
 function setFieldDash(d){ fieldDrawDash=d; document.querySelectorAll('#field-dash-btns .fw-btn').forEach(b=>b.classList.toggle('active',b.dataset.dash===d)); }
 function buildFieldBgColors(){
   const wrap=document.getElementById('field-bg-colors'); if(!wrap) return;
-  wrap.innerHTML=FIELD_BG_COLORS.map(c=>`<span class="color-dot${c===fieldBg?' active':''}" style="background:${c}" onclick="setFieldBg('${c}')"></span>`).join('');
+  wrap.innerHTML=FIELD_BG_COLORS.map(c=>`<span class="annot-swatch${c===fieldBg?' sel':''}" style="background:${c}" onclick="setFieldBg('${c}')"></span>`).join('');
 }
 function buildFieldDrawColors(){
   const wrap=document.getElementById('field-draw-colors'); if(!wrap) return;
-  wrap.innerHTML=FIELD_DRAW_COLORS.map(c=>`<span class="color-dot${c===fieldDrawColor?' active':''}" style="background:${c};${c==='#ffffff'?'border:1px solid #555':''}" onclick="setFieldDrawColor('${c}')"></span>`).join('');
+  wrap.innerHTML=FIELD_DRAW_COLORS.map(c=>`<span class="annot-swatch${c===fieldDrawColor?' sel':''}" style="background:${c};${c==='#ffffff'?'border:1px solid #555':''}" onclick="setFieldDrawColor('${c}')"></span>`).join('');
 }
 function selInfo(p){ const el=document.getElementById('selInfo'); if(p){el.textContent=`Selected: ${p.label}`;el.style.display='block';}else el.style.display='none'; }
 
