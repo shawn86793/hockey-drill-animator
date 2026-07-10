@@ -165,6 +165,9 @@ input[type=range]{width:100%;accent-color:#00a8ff}
 .xmodal-png:hover{background:#0a2a1e;border-color:#00ee99}
 .xmodal-pdf{padding:8px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#0055aa,#0088cc);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
 .xmodal-pdf:hover{background:linear-gradient(135deg,#0066cc,#00aaff);box-shadow:0 2px 10px #00a8ff44}
+.xmodal-gif{padding:8px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#6600cc,#aa22ff);color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s}
+.xmodal-gif:hover{background:linear-gradient(135deg,#7700ee,#cc44ff);box-shadow:0 2px 10px #aa22ff44}
+.xmodal-gif:disabled{opacity:.5;cursor:default}
 .xmodal-status{font-size:11px;color:#00a8ff;align-self:center;margin-right:auto}
 
 /* ── ANNOTATIONS ── */
@@ -1920,8 +1923,8 @@ document.addEventListener('keydown', e => {
 function openExportModal(){
   const hint = document.getElementById('export-acts-hint');
   if(hint) hint.textContent = acts.length > 1
-    ? `PDF will include all ${acts.length} acts — one per page.`
-    : 'PNG exports the current view. PDF adds title and notes.';
+    ? `PDF includes all ${acts.length} acts — one per page. GIF animates all acts.`
+    : 'PNG = still image · PDF = printable with notes · GIF = animated';
   document.getElementById('export-status').textContent = '';
   document.getElementById('export-modal').classList.add('open');
 }
@@ -2005,6 +2008,87 @@ async function exportPDF(){
     console.error(err);
     if(statusEl) statusEl.textContent = 'Export failed — see console.';
   }
+}
+
+let _gifWorkerUrl = null;
+async function getGifWorkerUrl(){
+  if(_gifWorkerUrl) return _gifWorkerUrl;
+  const resp = await fetch('https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js');
+  const text = await resp.text();
+  _gifWorkerUrl = URL.createObjectURL(new Blob([text], {type:'application/javascript'}));
+  return _gifWorkerUrl;
+}
+
+async function exportGIF(){
+  const statusEl = document.getElementById('export-status');
+  const btn = document.getElementById('export-gif-btn');
+  if(!moves.length){ if(statusEl) statusEl.textContent='Draw some moves first!'; return; }
+  if(typeof GIF === 'undefined'){ if(statusEl) statusEl.textContent='GIF library not loaded — try again.'; return; }
+
+  if(btn) btn.disabled = true;
+  if(statusEl) statusEl.textContent = 'Preparing…';
+  await new Promise(r => setTimeout(r, 0));
+
+  let workerScript;
+  try { workerScript = await getGifWorkerUrl(); }
+  catch(e){ workerScript = 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'; }
+
+  const FPS = 15;
+  const DELAY = Math.round(1000 / FPS);
+  const scale = Math.min(1, 640 / canvas.width);
+  const gW = Math.round(canvas.width * scale);
+  const gH = Math.round(canvas.height * scale);
+
+  const gif = new GIF({workers:2, quality:6, workerScript, width:gW, height:gH});
+
+  const offscreen = document.createElement('canvas');
+  offscreen.width = gW; offscreen.height = gH;
+  const offCtx = offscreen.getContext('2d');
+
+  const savedActId = currentActId;
+  const savedAnimPlaying = animPlaying;
+  const savedAnimTime = animTime;
+  if(animRaf) cancelAnimationFrame(animRaf);
+  animPlaying = false;
+
+  // Encode each act sequentially
+  for(let ai = 0; ai < acts.length; ai++){
+    setCurrentAct(acts[ai].id);
+    animPlaying = true;
+    animTime = 0;
+    const totalDur = getTotalDuration();
+    const frameCount = Math.max(2, Math.ceil(totalDur * FPS) + 1);
+    for(let i = 0; i < frameCount; i++){
+      animTime = Math.min(i / FPS, totalDur);
+      render();
+      offCtx.clearRect(0, 0, gW, gH);
+      offCtx.drawImage(canvas, 0, 0, gW, gH);
+      gif.addFrame(offCtx, {copy:true, delay:DELAY});
+      if(statusEl) statusEl.textContent = `Capturing act ${ai+1}/${acts.length} · frame ${i+1}/${frameCount}`;
+      if(i % 8 === 0) await new Promise(r => setTimeout(r, 0));
+    }
+    animPlaying = false;
+  }
+
+  // Restore state
+  animPlaying = savedAnimPlaying;
+  animTime = savedAnimTime;
+  setCurrentAct(savedActId);
+  render();
+
+  gif.on('progress', p => { if(statusEl) statusEl.textContent = `Encoding GIF… ${Math.round(p*100)}%`; });
+  gif.on('finished', blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const title = (document.getElementById('export-title')?.value || 'drill').trim() || 'drill';
+    a.href = url; a.download = title.replace(/[^a-zA-Z0-9 _-]/g,'_') + '.gif'; a.click();
+    URL.revokeObjectURL(url);
+    if(statusEl) statusEl.textContent = '';
+    if(btn) btn.disabled = false;
+    closeExportModal();
+  });
+  if(statusEl) statusEl.textContent = 'Encoding GIF…';
+  gif.render();
 }
 
 function setSport(newSport, newSurfaceType){
@@ -2190,9 +2274,11 @@ init();
       <button class="xmodal-cancel" onclick="closeExportModal()">Cancel</button>
       <button class="xmodal-png" onclick="exportPNG()">Save PNG</button>
       <button class="xmodal-pdf" onclick="exportPDF()">Save PDF</button>
+      <button class="xmodal-gif" id="export-gif-btn" onclick="exportGIF()">Save GIF</button>
     </div>
   </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js" defer></script>
 </body>
 </html>
